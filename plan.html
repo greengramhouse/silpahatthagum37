@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบค้นหาห้องงานศิลปหัตถกรรม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        /* Animation แบบ Dynamic Color โดยใช้ CSS Variable --blink-color */
+        @keyframes dynamicBlink {
+            0%, 100% {
+                background-color: var(--bg-blink-start);
+                border-color: var(--blink-color);
+                box-shadow: 0 0 5px var(--blink-color);
+                transform: scale(1.02);
+            }
+            50% {
+                background-color: var(--bg-blink-end);
+                border-color: var(--blink-color);
+                box-shadow: 0 0 20px var(--blink-color);
+                transform: scale(1.05);
+            }
+        }
+
+        .active-room {
+            animation: dynamicBlink 1.5s infinite ease-in-out;
+            z-index: 50 !important;
+            font-weight: bold;
+            color: #1e293b;
+        }
+
+        /* Modal Animation */
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+            transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+        }
+        .modal-exit {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .modal-exit-active {
+            opacity: 0;
+            transform: scale(0.9);
+            transition: opacity 0.2s ease-in, transform 0.2s ease-in;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+    </style>
+</head>
+<body class="bg-slate-50 h-screen overflow-hidden flex flex-col landscape:flex-row md:flex-row text-slate-800 relative">
+
+    <!-- Modal แสดงรายละเอียด (ซ่อนอยู่) -->
+    <div id="infoModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm hidden" onclick="closeModal(event)">
+        <div class="bg-white w-full max-w-md mx-4 rounded-xl shadow-2xl overflow-hidden transform transition-all" onclick="event.stopPropagation()">
+            <!-- Header สีตามห้อง -->
+            <div id="modalHeader" class="h-24 bg-blue-500 flex items-end p-4 relative">
+                <button onclick="closeModal()" class="absolute top-2 right-2 bg-white/20 hover:bg-white/40 text-white rounded-full p-1 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+                <h2 id="modalTitle" class="text-2xl font-bold text-white drop-shadow-md">ชื่อห้อง</h2>
+            </div>
+            <!-- Body -->
+            <div class="p-6 space-y-4">
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">ชื่ออาคาร / Building</p>
+                    <p id="modalBuilding" class="text-slate-700 font-medium text-lg">-</p>
+                </div>
+                <div>
+                    <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">ตำแหน่งที่ตั้ง / Location</p>
+                    <p id="modalLocation" class="text-slate-700">-</p>
+                </div>
+                <div class="pt-4 border-t border-slate-100">
+                     <p class="text-xs text-slate-400 uppercase font-bold tracking-wider mb-2">รายละเอียดเพิ่มเติม</p>
+                     <p id="modalDesc" class="text-slate-600 text-sm leading-relaxed">-</p>
+                </div>
+            </div>
+            <!-- Footer -->
+            <div class="bg-slate-50 p-4 flex justify-end">
+                <button onclick="closeModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-medium transition">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <aside class="w-full h-2/4 landscape:w-1/4 landscape:h-full md:w-3/4 md:h-full bg-white shadow-xl z-20 flex flex-col border-r border-slate-200">
+        <!-- Header มี Gradient -->
+        <div class="p-5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white shrink-0 shadow-md">
+            <h1 class="text-xl font-bold flex items-center gap-2">
+                <span>📍</span> แผนผังการแข่งศิลปหัตถกรรมนักเรียน
+            </h1>
+            <p class="text-blue-100 text-xs mt-1 opacity-90">สนามแข่งโรงเรียนชุมชนวัดไทยงาม</p>
+        </div>
+
+        <!-- Floor Selector (ตัวเลือกชั้น) -->
+        <div class="flex border-b border-slate-200 bg-slate-100">
+            <button onclick="switchFloor(1)" id="btnFloor1" class="flex-1 py-3 text-sm font-bold text-blue-600 bg-white border-b-2 border-blue-600 transition-colors">ชั้น 1</button>
+            <button onclick="switchFloor(2)" id="btnFloor2" class="flex-1 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors">ชั้น 2</button>
+        </div>
+        
+        <!-- List Container -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50" id="roomList">
+            <!-- รายชื่อห้องจะถูกสร้างที่นี่ -->
+        </div>
+
+        <!-- Footer -->
+        <div class="p-3 bg-white border-t border-slate-200 text-[10px] text-center text-slate-400 shrink-0">
+            ระดับกลุ่มโรงเรียน สหวิทยศึกษาสุวรรณโยธิน
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 relative overflow-auto bg-slate-200 p-2 md:p-4 flex items-center justify-center">
+        
+        <div class="relative bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-300 w-full max-w-[900px] aspect-square md:aspect-[4/3] landscape:aspect-[4/3] shrink-0" 
+             id="mapWrapper">
+            
+            <!-- Grid Background -->
+            <div class="absolute inset-0 opacity-30 pointer-events-none" 
+                 style="background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 20px 20px;">
+            </div>
+
+            <!-- Floor Indicator (แสดงชั้นมุมขวาบน) -->
+            <div class="absolute top-4 right-4 z-20 bg-black/70 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm pointer-events-none">
+                FL <span id="floorIndicator">1</span>
+            </div>
+
+            <!-- Rooms Layer -->
+            <div id="mapContainer" class="w-full h-full relative">
+                <!-- ห้องต่างๆ จะถูกสร้างที่นี่ -->
+            </div>
+
+            <!-- Legend -->
+            <!-- <div class="absolute bottom-2 right-2 flex gap-3 text-[10px] text-slate-400 bg-white/80 px-2 py-1 rounded backdrop-blur-sm border border-slate-100 z-20">
+                <div class="flex items-center gap-1"><div class="w-2 h-2 bg-blue-500 rounded-full"></div> จุดแข่งขัน</div>
+                <div class="flex items-center gap-1"><div class="w-2 h-2 bg-slate-300 rounded-full"></div> อาคารทั่วไป</div>
+            </div> -->
+
+        </div>
+    </main>
+
+    <script>
+        // สถานะปัจจุบัน
+        let currentFloor = 1;
+
+        // ข้อมูลห้อง
+        // เพิ่ม property: floor (1 หรือ 2), building (ชื่ออาคาร), details (รายละเอียดเพิ่มเติม)
+        const rooms = [
+            // --- ชั้น 1 (Floor 1) ---
+            // Status: False
+            { id: 'r001', floor: 1, name: 'สนามกีฬา', style: 'top: 35%; left: 5%; width: 45%; height: 40%;', status: false },
+            { id: 'r101', floor: 1, name: 'อาคารชำนาญ-เพ็ญชาติ', style: 'top: 5%; left: 5%; width: 40%; height: 20%;', status: false  },
+            { id: 'r201', floor: 1, name: 'อาคาร 4 (สีเขียว)', style: 'top: 5%; left: 80%; width: 15%; height: 65%;', status: false },
+            { id: 'r202', floor: 1, name: 'อาคาร 1', style: 'top: 38%; left: 60%; width: 15%; height: 40%;', status: false },
+            
+            // Status: True
+            { 
+                id: 'meet_l', floor: 1, name: 'โรงอาหาร', style: 'top: 5%; left: 50%; width: 25%; height: 30%;', status: true, color: '#f59e0b',
+                building: 'อาคารโรงอาหารกลาง', location: 'อาคารเอนกประสงค์', details: 'สถานที่รับประทานอาหารและจุดนัดพบหลัก'
+            }, 
+            { 
+                id: 'x503', floor: 1, name: 'หนังสือเล่มเล็ก', style: 'top: 55%; left: 80%; width: 15%; height: 10%;' , status: true, color: '#8b5cf6',
+                building: 'อาคาร 4 (สีเขียว)', location: 'ห้องสมุด', details: 'การแข่งขันทำหนังสือเล่มเล็ก ระดับ ป.4-6'
+            },
+            { 
+                id: 'x501', floor: 1, name: 'ปั้นดินน้ำมัน', style: 'top: 60%; left: 60%; width: 15%; height: 10%;', status: true, color: '#ec4899',
+                building: 'อาคารอำนวยการ', location: 'ห้องอนุบาล', details: 'การแข่งขันปั้นดินน้ำมัน'
+            },
+            { 
+                id: 'x502', floor: 1, name: 'ฉีกตัดปะ', style: 'top: 70%; left: 60%; width: 15%; height: 10%;', status: true, color: '#10b981',
+                building: 'อาคารอำนวยการ', location: 'ห้องอนุบาล', details: 'เตรียมกรรไกรและกาวมาเอง กระดาษมีให้'
+            },
+            { 
+                id: 'r203', floor: 1, name: 'กองอำนวยการ', style: 'top: 80%; right: 5%; width: 30%; height: 18%;', status: true, color: '#3b82f6',
+                building: 'อาคารคอตโต', location: 'ห้องประชุม คอตโต', details: 'ติดต่อสอบถาม ประชาสัมพันธ์ และปฐมพยาบาล'
+            },
+            { 
+                id: 'toilet', floor: 1, name: 'ศิลปะ', style: 'bottom: 5%; right: 40%; width: 10%; height: 15%;', status: true, color: '#ef4444',
+                building: 'ห้องศิลปะ', location: 'ห้องเรียนศิลปะ', details: 'การแข่งขันวาดภาพระบายสี'
+            },
+            { 
+                id: 'xxcoffee', floor: 1, name: 'อาคาร3', style: 'bottom: 5%; left: 10%; width: 35%; height: 15%;', status: false,
+                building: 'อาคาร 3', location: 'อาคาร 3', details: ''
+            },
+            { 
+                id: 'coffee', floor: 1, name: 'ปั้นนูนต่ำ', style: 'bottom: 5%; left: 30%; width: 14%; height: 15%;', status: true, color: '#06b6d4',
+                building: 'อาคาร 3', location: 'ห้องเรียน นาฏศิลป์', details: 'งานประติมากรรมนูนต่ำ'
+            },
+
+
+            // --- ชั้น 2 (Floor 2) - เพิ่มข้อมูลจำลองสำหรับชั้น 2 ตรงนี้ ---
+            // (คุณสามารถแก้ไขตำแหน่ง style และข้อมูลรายละเอียดได้เลย)
+            { id: 'f2r001', floor: 2, name: 'สนามกีฬา', style: 'top: 35%; left: 5%; width: 45%; height: 40%;', status: false },
+            { id: 'f2r101', floor: 2, name: 'อาคารชำนาญ-เพ็ญชาติ', style: 'top: 5%; left: 5%; width: 40%; height: 20%;', status: false  },
+            { id: 'f2r201', floor: 2, name: 'อาคาร 4 (สีเขียว)', style: 'top: 5%; left: 80%; width: 15%; height: 65%;', status: false },
+            { id: 'f2r202', floor: 2, name: '', style: 'top: 38%; left: 60%; width: 15%; height: 40%;', status: false },
+            
+            // Status: True
+            { 
+                id: 'f2meet_l', floor: 2, name: 'โรงอาหาร', style: 'top: 5%; left: 50%; width: 25%; height: 30%;', status: false, color: '#f59e0b',
+                building: 'อาคารโรงอาหารกลาง', location: 'ชั้น 1 โซน A', details: 'สถานที่รับประทานอาหารและจุดนัดพบหลัก'
+            }, 
+            { 
+                id: 'f2x503', floor: 2, name: 'หนังสือเล่มเล็ก', style: 'top: 55%; left: 80%; width: 15%; height: 10%;' , status: false, color: '#8b5cf6',
+                building: 'อาคาร 4 (สีเขียว)', location: 'ห้อง 112', details: 'การแข่งขันทำหนังสือเล่มเล็ก ระดับ ป.4-6'
+            },
+            { 
+                id: 'f2x501', floor: 2, name: 'คอมกราฟิก', style: 'top: 50%; left: 60%; width: 15%; height: 10%;', status: true, color: '#ec4899',
+                building: 'อาคารอเนกประสงค์', location: 'ลานกิจกรรม', details: 'การแข่งขันปั้นดินน้ำมัน หัวข้อ "สัตว์ป่าสงวน"'
+            },
+            { 
+                id: 'f2x502', floor: 2, name: 'การ์ตูนกราฟิก', style: 'top: 60%; left: 60%; width: 15%; height: 10%;', status: true, color: '#10b981',
+                building: 'อาคารอเนกประสงค์', location: 'ห้องศิลปะ 1', details: 'เตรียมกรรไกรและกาวมาเอง กระดาษมีให้'
+            },
+            { 
+                id: 'f2r203', floor: 2, name: 'กองอำนวยการ', style: 'top: 80%; right: 5%; width: 30%; height: 18%;', status: false, color: '#3b82f6',
+                building: 'อาคารอำนวยการ', location: 'ห้องธุรการ', details: 'ติดต่อสอบถาม ประชาสัมพันธ์ และปฐมพยาบาล'
+            },
+            { 
+                id: 'f2toilet', floor: 2, name: 'ศิลปะ', style: 'bottom: 5%; right: 40%; width: 10%; height: 15%;', status: false, color: '#ef4444',
+                building: 'อาคารศิลปะ', location: 'ห้องปฏิบัติการ 1', details: 'การแข่งขันวาดภาพระบายสี'
+            },
+            { 
+                id: 'f2coffee', floor: 2, name: 'อาคาร 3', style: 'bottom: 5%; left: 10%; width: 35%; height: 15%;', status: false, 
+                building: 'ลานประติมากรรม', location: 'ลานกลางแจ้ง', details: 'งานประติมากรรมนูนต่ำ'
+            },
+        ];
+
+        const roomListEl = document.getElementById('roomList');
+        const mapContainerEl = document.getElementById('mapContainer');
+        const infoModal = document.getElementById('infoModal');
+
+        function initApp() {
+            renderMapAndMenu();
+        }
+
+        function switchFloor(floor) {
+            currentFloor = floor;
+            
+            // Update UI Buttons
+            const btn1 = document.getElementById('btnFloor1');
+            const btn2 = document.getElementById('btnFloor2');
+            const floorInd = document.getElementById('floorIndicator');
+            
+            floorInd.textContent = floor;
+
+            if (floor === 1) {
+                btn1.className = 'flex-1 py-3 text-sm font-bold text-blue-600 bg-white border-b-2 border-blue-600 transition-colors';
+                btn2.className = 'flex-1 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors';
+            } else {
+                btn1.className = 'flex-1 py-3 text-sm font-medium text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors';
+                btn2.className = 'flex-1 py-3 text-sm font-bold text-blue-600 bg-white border-b-2 border-blue-600 transition-colors';
+            }
+
+            renderMapAndMenu();
+        }
+
+        function renderMapAndMenu() {
+            // Clear contents
+            roomListEl.innerHTML = '';
+            mapContainerEl.innerHTML = '';
+
+            // Filter rooms by current floor
+            const currentRooms = rooms.filter(r => r.floor === currentFloor);
+
+            if (currentRooms.length === 0) {
+                roomListEl.innerHTML = '<div class="text-center text-slate-400 mt-10">ไม่พบข้อมูลห้องในชั้นนี้</div>';
+                mapContainerEl.innerHTML = '<div class="absolute inset-0 flex items-center justify-center text-slate-400">ไม่พบแผนผังชั้นนี้</div>';
+                return;
+            }
+
+            // Create UI
+            currentRooms.forEach((room) => {
+                // --- 1. Sidebar Menu (Only Status: true) ---
+                if (room.status) {
+                    const btn = document.createElement('button');
+                    const accentColor = room.color || '#3b82f6';
+                    
+                    btn.className = 'w-full text-left px-4 py-3 bg-white rounded-lg shadow-sm hover:shadow-md hover:bg-slate-50 transition-all duration-200 border border-slate-200 border-l-4 group relative overflow-hidden';
+                    btn.style.borderLeftColor = accentColor;
+                    
+                    btn.innerHTML = `
+                        <div class="flex items-center justify-between z-10 relative">
+                            <div>
+                                <div class="font-semibold text-slate-700 text-sm md:text-base group-hover:text-slate-900">${room.name}</div>
+                                <div class="text-[10px] text-slate-400 mt-0.5">${room.building || ''}</div>
+                            </div>
+                        </div>
+                        <div class="absolute inset-0 bg-gradient-to-r from-transparent to-slate-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                    `;
+                    btn.onclick = () => selectRoom(room);
+                    roomListEl.appendChild(btn);
+                }
+
+                // --- 2. Map Element ---
+                const roomDiv = document.createElement('div');
+                roomDiv.id = `map-${room.id}`;
+                roomDiv.style = room.style;
+                
+                let classNames = 'absolute flex items-center justify-center text-center p-1 rounded transition-all duration-300 select-none overflow-hidden ';
+                
+                if (room.status) {
+                    classNames += 'border-2 border-slate-500 bg-white shadow-sm cursor-pointer hover:shadow-lg hover:scale-[1.01] hover:bg-slate-50 z-10';
+                    roomDiv.onclick = () => selectRoom(room);
+                    roomDiv.innerHTML = `
+                        <div class="w-full h-full flex flex-col justify-center items-center p-1 pointer-events-none">
+                            <div class="font-bold text-slate-700 text-[2.5vw] md:text-xs lg:text-sm leading-tight drop-shadow-sm">${room.name}</div>
+                        </div>
+                    `;
+                } else {
+                    classNames += 'border border-slate-300 border-dashed bg-slate-100/50 text-slate-400 z-0';
+                    if(room.name) {
+                        roomDiv.innerHTML = `
+                            <div class="w-full h-full flex flex-col justify-center items-center opacity-60">
+                                <div class="font-normal text-[2vw] md:text-[10px] lg:text-xs leading-tight">${room.name}</div>
+                            </div>
+                        `;
+                    }
+                }
+                
+                roomDiv.className = classNames;
+                mapContainerEl.appendChild(roomDiv);
+            });
+        }
+
+        function selectRoom(roomData) {
+            // 1. Clear Active
+            document.querySelectorAll('.active-room').forEach(el => {
+                el.classList.remove('active-room');
+                el.style.removeProperty('--blink-color');
+                el.style.removeProperty('--bg-blink-start');
+                el.style.removeProperty('--bg-blink-end');
+            });
+            
+            // 2. Find Element
+            const targetRoom = document.getElementById(`map-${roomData.id}`);
+            
+            if (targetRoom) {
+                const color = roomData.color || getRandomColor();
+                targetRoom.style.setProperty('--blink-color', color);
+                targetRoom.style.setProperty('--bg-blink-start', hexToRgba(color, 0.1));
+                targetRoom.style.setProperty('--bg-blink-end', hexToRgba(color, 0.3));
+                targetRoom.classList.add('active-room');
+                targetRoom.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+                // 3. Open Modal with Details
+                openModal(roomData);
+            }
+        }
+
+        // --- Modal Functions ---
+        function openModal(room) {
+            if (!room.status) return; // Don't open for static rooms
+
+            const modal = document.getElementById('infoModal');
+            const header = document.getElementById('modalHeader');
+            
+            // Populate Data
+            document.getElementById('modalTitle').textContent = room.name;
+            document.getElementById('modalBuilding').textContent = room.building || '-';
+            document.getElementById('modalLocation').textContent = room.location || '-';
+            document.getElementById('modalDesc').textContent = room.details || 'ไม่มีรายละเอียดเพิ่มเติม';
+
+            // Set Header Color
+            header.style.backgroundColor = room.color || '#3b82f6';
+
+            // Show Modal
+            modal.classList.remove('hidden');
+            // Small delay to allow CSS transition
+            setTimeout(() => {
+                modal.classList.add('modal-enter-active');
+            }, 10);
+        }
+
+        function closeModal(event) {
+            const modal = document.getElementById('infoModal');
+            
+            modal.classList.remove('modal-enter-active');
+            modal.classList.add('modal-exit-active');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('modal-exit-active');
+            }, 200);
+        }
+
+        // Helper Functions
+        function hexToRgba(hex, alpha) {
+            let c;
+            if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+                c= hex.substring(1).split('');
+                if(c.length== 3){
+                    c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+                }
+                c= '0x'+c.join('');
+                return 'rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+','+alpha+')';
+            }
+            return `rgba(236, 72, 153, ${alpha})`;
+        }
+
+        function getRandomColor() {
+            const colors = ['#f43f5e', '#ec4899', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#10b981', '#f59e0b', '#f97316'];
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        initApp();
+
+    </script>
+</body>
+</html>
