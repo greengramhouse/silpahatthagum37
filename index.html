@@ -17,7 +17,7 @@
 
     <!-- Font: Kanit -->
     <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -78,7 +78,7 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid rgba(234, 88, 12, 0.1);
-            box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.03);
             z-index: 50;
             padding-bottom: env(safe-area-inset-bottom);
         }
@@ -91,7 +91,7 @@
         .nav-item.active {
             color: #ea580c;
         }
-        
+
         .nav-item.active::after {
             content: '';
             position: absolute;
@@ -112,33 +112,51 @@
     <div id="loadingOverlay" class="loading-overlay">
         <div class="relative">
             <div class="w-16 h-16 border-4 border-orange-100 border-dashed rounded-full animate-spin"></div>
-            <div class="absolute top-0 left-0 w-16 h-16 border-4 border-orange-500 border-solid rounded-full animate-spin border-t-transparent"></div>
+            <div
+                class="absolute top-0 left-0 w-16 h-16 border-4 border-orange-500 border-solid rounded-full animate-spin border-t-transparent">
+            </div>
         </div>
         <p class="mt-4 text-orange-800 font-medium animate-pulse">กำลังโหลดข้อมูล...</p>
     </div>
 
     <!-- MAIN CONTAINER -->
-    <div class="max-w-md mx-auto min-h-screen md:max-w-5xl md:my-5 md:rounded-[32px] md:shadow-2xl md:bg-white md:overflow-hidden flex flex-col relative">
+    <div
+        class="max-w-md mx-auto min-h-screen md:max-w-5xl md:my-5 md:rounded-[32px] md:shadow-2xl md:bg-white md:overflow-hidden flex flex-col relative">
 
         <!-- Header -->
         <header class="gradient-header text-white px-6 pt-10 pb-12 shadow-lg relative shrink-0 z-10">
-            <div class="absolute top-0 right-0 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 bg-orange-300 opacity-20 rounded-full blur-xl translate-y-1/2 -translate-x-1/4"></div>
+            <div
+                class="absolute top-0 right-0 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/4">
+            </div>
+            <div
+                class="absolute bottom-0 left-0 w-24 h-24 bg-orange-300 opacity-20 rounded-full blur-xl translate-y-1/2 -translate-x-1/4">
+            </div>
 
             <div class="relative z-10">
                 <div class="flex justify-between items-start">
                     <div>
-                        <div class="inline-flex items-center gap-1.5 mb-2 bg-white/20 px-2.5 py-0.5 rounded-full text-[10px] font-medium border border-white/20 backdrop-blur-sm">
+                        <div
+                            class="inline-flex items-center gap-1.5 mb-2 bg-white/20 px-2.5 py-0.5 rounded-full text-[10px] font-medium border border-white/20 backdrop-blur-sm">
                             <i class="fas fa-star text-yellow-200"></i>
                             <span>ระดับกลุ่มโรงเรียน</span>
                         </div>
-                        <h1 class="text-xl md:text-2xl font-bold tracking-tight mb-1 text-white drop-shadow-sm">ศิลปหัตถกรรมนักเรียน ครั้งที่ 73</h1>
-                        <p class="text-orange-50 text-xs font-light opacity-90">แบบประเมินความพึงพอใจการจัดการแข่งขัน</p>
+                        <h1 class="text-xl md:text-2xl font-bold tracking-tight mb-1 text-white drop-shadow-sm">
+                            ศิลปหัตถกรรมนักเรียน ครั้งที่ 73</h1>
+                        <p class="text-orange-50 text-xs font-light opacity-90">แบบประเมินความพึงพอใจการจัดการแข่งขัน
+                        </p>
                     </div>
-                    
+
                     <!-- Guest Badge -->
-                    <div class="flex items-center justify-center bg-white/10 w-10 h-10 rounded-full border border-white/20 backdrop-blur-md shadow-sm">
-                        <i class="fas fa-user text-white text-sm"></i>
+                    <div
+                        class="flex items-center justify-center bg-white/10 w-10 h-10 rounded-full border border-white/20 backdrop-blur-md shadow-sm">
+                        <div
+                            class="w-14 h-14 mx-auto mb-3 bg-white rounded-full flex items-center justify-center shadow-sm border-2 border-orange-100 overflow-hidden relative">
+                            <!-- Placeholder Image (School Icon) -->
+                            <!-- <i class="fas fa-school text-2xl text-orange-300"></i> -->
+                            <!--  หากต้องการใส่รูปภาพ ให้ใช้แท็กนี้แทน:  -->
+                            <img src="https://res.cloudinary.com/gukkghu/image/upload/v1646575846/gukkghu/%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%AD%E0%B8%AD%E0%B8%81%E0%B9%81%E0%B8%9A%E0%B8%9A%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B9%84%E0%B8%A1%E0%B9%88%E0%B8%A1%E0%B8%B5%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD_aytvpq.png"
+                                class="w-full h-full object-cover">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -150,33 +168,41 @@
             <!-- PAGE: DASHBOARD -->
             <div id="pageDashboard" class="space-y-4">
 
-                 <!-- Schedule Section -->
-                 <div class="glass-card rounded-2xl overflow-hidden bg-white">
+                <!-- Schedule Section -->
+                <div class="glass-card rounded-2xl overflow-hidden bg-white">
                     <div class="p-4 border-b border-orange-50 flex justify-between items-center bg-orange-50/50">
                         <h3 class="font-bold text-stone-700 text-sm flex items-center gap-2">
-                            <div class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs">
+                            <div
+                                class="w-6 h-6 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center text-xs">
                                 <i class="far fa-calendar-alt"></i>
                             </div>
                             กำหนดการวันนี้
                         </h3>
-                        <span class="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">Live</span>
+                        <span
+                            class="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-md border border-orange-100">Live</span>
                     </div>
-                    
+
                     <div class="p-5 relative">
                         <div class="timeline-line"></div>
                         <div class="space-y-6 pl-8">
                             <!-- Item 1 -->
                             <div class="relative">
-                                <div class="absolute -left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-green-500 shadow z-10"></div>
+                                <div
+                                    class="absolute -left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-green-500 shadow z-10">
+                                </div>
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-xs font-bold text-green-600">07:30 - 08:30</span>
-                                    <h4 class="text-sm font-semibold text-stone-800">พร้อมกัน ณ โรงเรียนชุมชนวัดไทยงาม</h4>
-                                    <p class="text-[10px] text-stone-400">คณะกรรมการ ผู้บริหาร ครู นักเรียน และแขกผู้มีเกียรติ</p>
+                                    <h4 class="text-sm font-semibold text-stone-800">พร้อมกัน ณ โรงเรียนชุมชนวัดไทยงาม
+                                    </h4>
+                                    <p class="text-[10px] text-stone-400">คณะกรรมการ ผู้บริหาร ครู นักเรียน
+                                        และแขกผู้มีเกียรติ</p>
                                 </div>
                             </div>
                             <!-- Item 2 -->
                             <div class="relative">
-                                <div class="absolute -left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-blue-500 shadow z-10"></div>
+                                <div
+                                    class="absolute -left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-blue-500 shadow z-10">
+                                </div>
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-xs font-bold text-blue-600">08:30 - 08:40</span>
                                     <h4 class="text-sm font-semibold text-stone-800">ประธานในพิธีเดินทางมาถึง</h4>
@@ -185,7 +211,9 @@
                             </div>
                             <!-- Item 3 -->
                             <div class="relative">
-                                <div class="absolute -left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-indigo-500 shadow z-10"></div>
+                                <div
+                                    class="absolute -left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-indigo-500 shadow z-10">
+                                </div>
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-xs font-bold text-indigo-600">08:45 - 09:00</span>
                                     <h4 class="text-sm font-semibold text-stone-800">พิธีเปิดและกล่าวรายงาน</h4>
@@ -193,20 +221,24 @@
                                 </div>
                             </div>
                             <!-- Item 4 -->
-                             <div class="relative">
-                                <div class="absolute -left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-orange-500 shadow z-10"></div>
+                            <div class="relative">
+                                <div
+                                    class="absolute -left-[39px] top-1 w-4 h-4 rounded-full border-2 border-white bg-orange-500 shadow z-10">
+                                </div>
                                 <div class="flex flex-col gap-0.5">
                                     <span class="text-xs font-bold text-orange-600">09:00 เป็นต้นไป</span>
-                                    <h4 class="text-sm font-semibold text-stone-800">เริ่มการแข่งขันและเยี่ยมชมกิจกรรม</h4>
+                                    <h4 class="text-sm font-semibold text-stone-800">เริ่มการแข่งขันและเยี่ยมชมกิจกรรม
+                                    </h4>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Stats Section -->
                 <div class="grid grid-cols-2 gap-3">
-                    <div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-white">
+                    <div
+                        class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-white">
                         <i class="fas fa-users text-2xl text-orange-500 mb-2 opacity-80"></i>
                         <span class="text-[10px] text-stone-400 uppercase tracking-wide">ผู้ประเมิน</span>
                         <div class="flex items-baseline gap-1 mt-1">
@@ -214,9 +246,11 @@
                             <span class="text-xs text-stone-400">คน</span>
                         </div>
                     </div>
-                    
-                    <div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-white cursor-pointer hover:bg-orange-50 transition-colors" onclick="goToEvaluation()">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white shadow-lg shadow-orange-500/30 mb-2 animate-bounce">
+
+                    <div class="glass-card rounded-2xl p-4 flex flex-col items-center justify-center text-center bg-white cursor-pointer hover:bg-orange-50 transition-colors"
+                        onclick="goToEvaluation()">
+                        <div
+                            class="w-10 h-10 rounded-full bg-gradient-to-tr from-orange-500 to-amber-400 flex items-center justify-center text-white shadow-lg shadow-orange-500/30 mb-2 animate-bounce">
                             <i class="fas fa-pen"></i>
                         </div>
                         <span class="text-xs font-bold text-stone-600">ทำแบบประเมิน</span>
@@ -226,10 +260,15 @@
 
                 <!-- NEW: Criteria Link Button -->
                 <!-- คุณสามารถเปลี่ยน href="#" เป็นลิงค์เอกสารจริง เช่น Google Drive Link -->
-                <a href="https://drive.google.com/drive/folders/12OYLNjtJl8VQtN4m1HW09WNFUxJcDnYg?fbclid=IwdGRjcAOTsaljbGNrA5OxX2V4dG4DYWVtAjExAHNydGMGYXBwX2lkDDM1MDY4NTUzMTcyOAABHrj_PWWpviNRw-u4HdkOwiSSkHK2f1gOHmqr75331MccIGlOHcDMyXi1cGtj_aem_81zleOE-qDe7ZeEChKOgkw" target="_blank" class="block glass-card rounded-2xl p-4 flex items-center justify-between text-stone-700 hover:bg-orange-50 transition-colors group no-underline relative overflow-hidden">
-                    <div class="absolute right-0 top-0 w-16 h-16 bg-orange-100 rounded-full blur-xl opacity-50 -mr-4 -mt-4"></div>
+                <a href="https://drive.google.com/drive/folders/12OYLNjtJl8VQtN4m1HW09WNFUxJcDnYg?fbclid=IwdGRjcAOTsaljbGNrA5OxX2V4dG4DYWVtAjExAHNydGMGYXBwX2lkDDM1MDY4NTUzMTcyOAABHrj_PWWpviNRw-u4HdkOwiSSkHK2f1gOHmqr75331MccIGlOHcDMyXi1cGtj_aem_81zleOE-qDe7ZeEChKOgkw"
+                    target="_blank"
+                    class="block glass-card rounded-2xl p-4 flex items-center justify-between text-stone-700 hover:bg-orange-50 transition-colors group no-underline relative overflow-hidden">
+                    <div
+                        class="absolute right-0 top-0 w-16 h-16 bg-orange-100 rounded-full blur-xl opacity-50 -mr-4 -mt-4">
+                    </div>
                     <div class="flex items-center gap-3 relative z-10">
-                        <div class="w-10 h-10 rounded-full bg-white border border-orange-100 text-orange-500 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+                        <div
+                            class="w-10 h-10 rounded-full bg-white border border-orange-100 text-orange-500 flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
                             <i class="fas fa-book-open"></i>
                         </div>
                         <div class="text-left">
@@ -237,7 +276,8 @@
                             <p class="text-[10px] text-orange-500 font-medium">แตะเพื่ออ่านรายละเอียด</p>
                         </div>
                     </div>
-                    <div class="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-300 group-hover:bg-white group-hover:text-orange-500 transition-colors">
+                    <div
+                        class="w-8 h-8 rounded-full bg-stone-50 flex items-center justify-center text-stone-300 group-hover:bg-white group-hover:text-orange-500 transition-colors">
                         <i class="fas fa-chevron-right text-xs"></i>
                     </div>
                 </a>
@@ -251,10 +291,11 @@
                             Real-time
                         </div>
                     </div>
-                    
+
                     <div class="flex items-center justify-center relative h-48">
-                         <canvas id="satisfactionChart"></canvas>
-                         <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-4">
+                        <canvas id="satisfactionChart"></canvas>
+                        <div
+                            class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pt-4">
                             <span class="text-[10px] text-stone-400 uppercase">เฉลี่ย</span>
                             <span id="avgScore" class="text-3xl font-bold text-stone-700 leading-none">--</span>
                             <div class="flex text-yellow-400 text-[10px] mt-1 gap-0.5">
@@ -266,11 +307,13 @@
 
                 <!-- NEW: Organizer Footer -->
                 <div class="mt-8 text-center pb-24 opacity-90">
-                    <div class="w-16 h-16 mx-auto mb-3 bg-white rounded-full flex items-center justify-center shadow-sm border-2 border-orange-100 overflow-hidden relative">
+                    <div
+                        class="w-16 h-16 mx-auto mb-3 bg-white rounded-full flex items-center justify-center shadow-sm border-2 border-orange-100 overflow-hidden relative">
                         <!-- Placeholder Image (School Icon) -->
                         <!-- <i class="fas fa-school text-2xl text-orange-300"></i> -->
                         <!--  หากต้องการใส่รูปภาพ ให้ใช้แท็กนี้แทน:  -->
-                        <img src="https://res.cloudinary.com/gukkghu/image/upload/v1646575846/gukkghu/%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%AD%E0%B8%AD%E0%B8%81%E0%B9%81%E0%B8%9A%E0%B8%9A%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B9%84%E0%B8%A1%E0%B9%88%E0%B8%A1%E0%B8%B5%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD_aytvpq.png" class="w-full h-full object-cover">
+                        <img src="https://res.cloudinary.com/gukkghu/image/upload/v1646575846/gukkghu/%E0%B8%87%E0%B8%B2%E0%B8%99%E0%B8%AD%E0%B8%AD%E0%B8%81%E0%B9%81%E0%B8%9A%E0%B8%9A%E0%B8%97%E0%B8%B5%E0%B9%88%E0%B9%84%E0%B8%A1%E0%B9%88%E0%B8%A1%E0%B8%B5%E0%B8%8A%E0%B8%B7%E0%B9%88%E0%B8%AD_aytvpq.png"
+                            class="w-full h-full object-cover">
                     </div>
                     <p class="text-[11px] text-stone-500 font-semibold">จัดทำโดย งานธุรการโรงเรียนชุมชนวัดไทยงาม</p>
                     <div class="flex items-center justify-center gap-1 mt-1">
@@ -286,7 +329,8 @@
             <div id="pageForm" class="hidden pb-8">
                 <div class="glass-card rounded-2xl p-5 bg-white min-h-[500px]">
                     <div class="flex items-center gap-3 mb-6 border-b border-orange-50 pb-4">
-                        <div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 shadow-sm border border-orange-100">
+                        <div
+                            class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600 shadow-sm border border-orange-100">
                             <i class="fas fa-list-check"></i>
                         </div>
                         <div>
@@ -298,7 +342,8 @@
                     <form id="evalForm" class="space-y-6">
                         <div id="questionsContainer" class="space-y-8"></div>
 
-                        <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 active:scale-95 transition-transform flex items-center justify-center gap-2">
+                        <button type="submit"
+                            class="w-full py-3.5 bg-gradient-to-r from-orange-600 to-amber-600 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 active:scale-95 transition-transform flex items-center justify-center gap-2">
                             <i class="fas fa-paper-plane text-sm"></i> ส่งข้อมูล
                         </button>
                     </form>
@@ -306,20 +351,22 @@
             </div>
 
         </main>
-        
+
     </div>
 
     <!-- BOTTOM NAVIGATION BAR -->
     <nav class="bottom-nav">
         <div class="flex justify-around items-center h-16 max-w-md mx-auto">
-            <button onclick="goToDashboard()" id="nav-dashboard" class="nav-item active flex-1 flex flex-col items-center justify-center h-full text-stone-400 hover:text-orange-500">
+            <button onclick="goToDashboard()" id="nav-dashboard"
+                class="nav-item active flex-1 flex flex-col items-center justify-center h-full text-stone-400 hover:text-orange-500">
                 <i class="fas fa-home text-lg mb-1"></i>
                 <span class="text-[10px] font-medium">หน้าหลัก</span>
             </button>
-            
+
             <div class="w-px h-8 bg-stone-100"></div>
 
-            <button onclick="goToEvaluation()" id="nav-evaluation" class="nav-item flex-1 flex flex-col items-center justify-center h-full text-stone-400 hover:text-orange-500">
+            <button onclick="goToEvaluation()" id="nav-evaluation"
+                class="nav-item flex-1 flex flex-col items-center justify-center h-full text-stone-400 hover:text-orange-500">
                 <i class="fas fa-clipboard-list text-lg mb-1"></i>
                 <span class="text-[10px] font-medium">ประเมิน</span>
             </button>
@@ -358,7 +405,7 @@
             guestId = storedId;
         }
         initGuest();
-        
+
         document.addEventListener('DOMContentLoaded', () => {
             goToDashboard(true);
         });
@@ -367,7 +414,7 @@
         function updateBottomNav(pageId) {
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active', 'text-orange-600'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.add('text-stone-400'));
-            
+
             let activeBtnId = '';
             if (pageId === 'pageDashboard') activeBtnId = 'nav-dashboard';
             if (pageId === 'pageForm') activeBtnId = 'nav-evaluation';
@@ -453,7 +500,7 @@
 
         function animateValue(id, start, end, duration) {
             const obj = document.getElementById(id);
-            if(!obj) return;
+            if (!obj) return;
             let startTimestamp = null;
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
@@ -469,9 +516,9 @@
             let totalVote = scores.reduce((a, b) => a + b, 0);
             let totalScore = scores.reduce((sum, count, idx) => sum + (count * (idx + 1)), 0);
             const avg = totalVote ? (totalScore / totalVote).toFixed(1) : "0.0";
-            
+
             const avgElement = document.getElementById('avgScore');
-            if(avgElement) avgElement.innerText = avg;
+            if (avgElement) avgElement.innerText = avg;
 
             if (chartInstance) chartInstance.destroy();
 
@@ -481,7 +528,7 @@
                     labels: ['1 ดาว', '2 ดาว', '3 ดาว', '4 ดาว', '5 ดาว'],
                     datasets: [{
                         data: scores,
-                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'], 
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'],
                         borderWidth: 0,
                         hoverOffset: 15
                     }]
@@ -498,13 +545,13 @@
 
         async function renderForm() {
             const container = document.getElementById('questionsContainer');
-            if(!container.innerHTML) container.innerHTML = '<div class="text-center py-10 text-stone-400"><i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br>กำลังโหลด...</div>';
-            
+            if (!container.innerHTML) container.innerHTML = '<div class="text-center py-10 text-stone-400"><i class="fas fa-circle-notch fa-spin text-2xl mb-2"></i><br>กำลังโหลด...</div>';
+
             const res = await fetchAPI('getQuestions');
-            
+
             if (res.status === 'success') {
                 container.innerHTML = '';
-                
+
                 let currentPart = "";
 
                 res.data.forEach((q, index) => {
@@ -538,7 +585,7 @@
                             <p class="text-sm font-medium text-stone-700 mb-2">${q.question}</p>
                             <div class="bg-stone-50 rounded-xl p-3 flex justify-between items-center px-4 relative">
                                 <div class="absolute top-1/2 left-6 right-6 h-0.5 bg-stone-200 -z-0"></div>
-                                ${[1,2,3,4,5].map(score => `
+                                ${[1, 2, 3, 4, 5].map(score => `
                                     <label class="cursor-pointer group flex flex-col items-center relative z-10">
                                         <input type="radio" name="q_${q.id}" value="${score}" class="peer sr-only" required>
                                         <div class="w-9 h-9 rounded-full border border-stone-300 bg-white flex items-center justify-center text-stone-400 font-bold text-sm transition-all duration-200 peer-checked:border-orange-500 peer-checked:bg-orange-500 peer-checked:text-white peer-checked:scale-110 peer-checked:shadow-md">
@@ -578,15 +625,15 @@
                 answers: answers
             };
 
-            Swal.fire({ 
-                title: 'กำลังบันทึก...', 
+            Swal.fire({
+                title: 'กำลังบันทึก...',
                 html: 'กรุณารอสักครู่',
-                didOpen: () => Swal.showLoading(), 
+                didOpen: () => Swal.showLoading(),
                 allowOutsideClick: false,
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdrop: `rgba(0,0,0,0.3)`
             });
-            
+
             const res = await fetchAPI('submit', payload);
 
             if (res.status === 'success') {
@@ -606,4 +653,5 @@
         });
     </script>
 </body>
+
 </html>
