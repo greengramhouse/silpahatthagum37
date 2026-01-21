@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบบันทึกคะแนนศิลปหัตถกรรม (Modern UI)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- PDFMake & Fonts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans Thai', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { font-family: 'Noto Sans Thai', sans-serif; background-color: #f8fafc; }
+        .loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.95); z-index: 9999;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            backdrop-filter: blur(5px);
+        }
+        .spinner {
+            border: 4px solid #f3f3f3; border-top: 4px solid #6366f1;
+            border-radius: 50%; width: 50px; height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Card Hover Effect */
+        .activity-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .activity-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen pb-20">
+
+    <!-- Loading Screen -->
+    <div id="loading" class="loading-overlay">
+        <div class="spinner mb-4 shadow-lg"></div>
+        <p class="text-indigo-600 font-bold text-lg animate-pulse" id="loading-text">กำลังเชื่อมต่อฐานข้อมูล...</p>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="bg-white shadow-md sticky top-0 z-50 border-b border-slate-200/60 backdrop-blur-md bg-white/90">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 p-2 rounded-lg shadow-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="font-bold text-xl text-slate-800 tracking-tight leading-none hidden md:block">ระบบบันทึกคะแนน</h1>
+                    <p class="text-xs text-slate-500 font-medium hidden md:block">งานศิลปหัตถกรรมนักเรียน ครั้งที่ 73</p>
+                    <h1 class="font-bold text-lg md:hidden">SilpaHattakam</h1>
+                </div>
+            </div>
+            <div class="flex space-x-2 text-sm font-medium">
+                <button onclick="app.showPage('home')" class="flex items-center space-x-1 px-4 py-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                    <span>รายการแข่งขัน</span>
+                </button>
+                <button onclick="app.showPage('summary')" class="flex items-center space-x-1 px-4 py-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                    <span>สรุปผล</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="app-container" class="container mx-auto px-4 py-8 max-w-7xl flex-grow">
+        
+        <!-- PAGE 1: Competition List -->
+        <div id="page-home">
+            <!-- Header Section -->
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-800">รายการแข่งขัน</h2>
+                    <p class="text-slate-500 mt-1">เลือกรายการเพื่อบันทึกคะแนนหรือพิมพ์เอกสาร</p>
+                </div>
+                <div class="relative w-full md:w-80 group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400 group-focus-within:text-indigo-500 transition" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <input type="text" id="search-box" onkeyup="app.filterActivities()" 
+                        placeholder="ค้นหากิจกรรม หรือ โรงเรียน..." 
+                        class="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm shadow-sm transition">
+                </div>
+            </div>
+
+            <!-- Categories Legend (Optional for clarity) -->
+            <div class="flex flex-wrap gap-3 mb-6 text-xs text-slate-600 font-medium">
+                <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-rose-500 mr-1.5"></span>ศิลปะ</span>
+                <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-emerald-500 mr-1.5"></span>งานอาชีพ/อาหาร</span>
+                <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-500 mr-1.5"></span>เทคโนโลยี</span>
+                <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-violet-500 mr-1.5"></span>ดนตรี/นาฏศิลป์</span>
+                <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-amber-500 mr-1.5"></span>วิชาการ</span>
+            </div>
+
+            <div id="activity-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Javascript will populate this -->
+            </div>
+            
+            <div id="no-result" class="hidden flex flex-col items-center justify-center py-20 text-slate-400">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mb-4 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p class="text-lg font-medium">ไม่พบข้อมูลที่ค้นหา</p>
+                <p class="text-sm">ลองค้นหาด้วยคำสำคัญอื่น</p>
+            </div>
+        </div>
+
+        <!-- PAGE 2: Score Entry -->
+        <div id="page-score" class="hidden fade-in">
+            <button onclick="app.showPage('home')" class="mb-6 px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:border-indigo-300 rounded-lg flex items-center font-medium text-sm transition shadow-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clip-rule="evenodd" /></svg>
+                ย้อนกลับ
+            </button>
+
+            <div class="bg-white rounded-2xl shadow-xl overflow-hidden ring-1 ring-slate-900/5">
+                <div id="score-header" class="bg-gradient-to-r from-slate-800 to-slate-900 p-8 text-white relative overflow-hidden">
+                    <div class="absolute top-0 right-0 opacity-10 -mr-16 -mt-16">
+                        <svg class="w-64 h-64" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" /></svg>
+                    </div>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span id="score-level" class="bg-white/20 backdrop-blur-sm text-white text-xs font-bold px-2.5 py-1 rounded-md tracking-wider"></span>
+                            <span id="score-id" class="text-xs text-slate-300 font-mono bg-black/20 px-2 py-1 rounded"></span>
+                        </div>
+                        <h2 id="score-title" class="text-3xl md:text-4xl font-bold leading-tight drop-shadow-sm"></h2>
+                    </div>
+                </div>
+                
+                <div class="p-6 md:p-8 bg-slate-50 min-h-[500px]">
+                    <div id="team-list" class="space-y-4 max-w-4xl mx-auto">
+                        <!-- Javascript will populate teams -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PAGE 3: Summary -->
+        <div id="page-summary" class="hidden fade-in">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-800">สรุปเหรียญรางวัล</h2>
+                    <p class="text-slate-500 mt-1">ภาพรวมผลการแข่งขันทั้งหมด</p>
+                </div>
+                <button onclick="app.exportToCSV()" class="flex items-center bg-emerald-600 text-white px-5 py-2.5 rounded-xl hover:bg-emerald-700 shadow-lg hover:shadow-emerald-500/30 transition font-medium">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    Export CSV
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Leaderboard -->
+                <div class="lg:col-span-2 bg-white rounded-2xl shadow-lg border border-slate-200/60 overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                        <h3 class="font-bold text-lg text-slate-800">อันดับโรงเรียน</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-500 uppercase bg-slate-50 border-b border-slate-100">
+                                <tr>
+                                    <th class="px-6 py-4 font-semibold">โรงเรียน</th>
+                                    <th class="px-4 py-4 text-center text-yellow-600 w-24">ทอง</th>
+                                    <th class="px-4 py-4 text-center text-slate-500 w-24">เงิน</th>
+                                    <th class="px-4 py-4 text-center text-orange-600 w-24">ทองแดง</th>
+                                    <th class="px-4 py-4 text-center w-24">รวม</th>
+                                </tr>
+                            </thead>
+                            <tbody id="leaderboard-body" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Recent Activity Log -->
+                <div class="bg-white rounded-2xl shadow-lg border border-slate-200/60 h-fit overflow-hidden">
+                    <div class="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                        <h3 class="font-bold text-lg text-slate-800">การบันทึกล่าสุด</h3>
+                        <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded-full font-medium">Live</span>
+                    </div>
+                    <ul id="recent-logs" class="space-y-0 max-h-[600px] overflow-y-auto custom-scrollbar p-0"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+<footer class="bg-white border-t border-slate-200 py-4 fixed bottom-0 left-0 w-full z-50">
+    <div class="container mx-auto px-4 text-center">
+        <p class="text-sm text-slate-500">
+            จัดทำโดย <span class="font-semibold text-indigo-600">โรงเรียนชุมชนวัดไทยงาม</span> &copy; ปีการศึกษา 2568
+        </p>
+    </div>
+</footer>
+
+
+    <!-- MAIN SCRIPT -->
+    <script>
+        // ==========================================
+        //  CONFIGURATION - ใส่ลิงก์ Script ที่นี่
+        // ==========================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbw6xihHx01eYPQlJ8jH7mtFjM6XFUGIoVc3JvCnVEl4i9nfSHFqDCqQQCO3F1JDgv_k/exec"; 
+        // ==========================================
+
+        // --- PDF CONFIGURATION ---
+        pdfMake.fonts = {
+            THSarabunNew: {
+                normal: 'https://guykorat.github.io/font/THSarabunNew.ttf',
+                bold: 'https://guykorat.github.io/font/Sarabun-ExtraBold.ttf',
+                italics: 'https://guykorat.github.io/font/THSarabunNew.ttf',
+                bolditalics: 'https://guykorat.github.io/font/Sarabun-ExtraBold.ttf'
+            },
+            Charm: {
+                normal: 'https://guykorat.github.io/font/Charm-Bold.ttf',
+                bold: 'https://guykorat.github.io/font/Charm-Regular.ttf',
+            },
+            Prompt: {
+                normal: 'https://guykorat.github.io/font/Prompt-Regular.ttf',
+                bold: 'https://guykorat.github.io/font/Prompt-Bold.ttf',
+            },
+            Roboto: {
+                 normal: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf',
+                 bold: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Medium.ttf',
+                 italics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Italic.ttf',
+                 bolditalics: 'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-MediumItalic.ttf'
+            }
+        };
+
+        const app = {
+            rawData: [],
+            savedScores: [],
+            groupedData: [],
+            
+            init: async function() {
+                try {
+                    if(API_URL.includes("PLACEHOLDER")) {
+                        Swal.fire('แจ้งเตือน', 'กรุณาใส่ URL ของ Google Apps Script ในโค้ดบรรทัดที่ 262 ก่อนใช้งาน', 'warning');
+                        this.stopLoading();
+                        return;
+                    }
+                    const response = await fetch(API_URL);
+                    const json = await response.json();
+                    if(json.status !== 'success') throw new Error('Failed to load data');
+                    this.rawData = json.competitions;
+                    this.savedScores = json.savedScores;
+                    this.processData();
+                    this.renderActivityList();
+                    this.updateLeaderboard();
+                    this.stopLoading();
+                } catch (error) {
+                    console.error(error);
+                    Swal.fire('Error', 'โหลดข้อมูลไม่สำเร็จ กรุณาลองใหม่อีกครั้ง', 'error');
+                    this.stopLoading();
+                }
+            },
+
+            // --- CATEGORY & STYLE LOGIC ---
+            getCategoryInfo: function(name) {
+                const n = name.toLowerCase();
+                
+                // 1. COMPUTER / TECH
+                if(n.includes('คอมพิวเตอร์') || n.includes('หุ่นยนต์') || n.includes('การ์ตูน') || n.includes('เกม')) {
+                    return {
+                        theme: 'blue',
+                        colorClass: 'text-blue-600 bg-blue-50 border-blue-200 hover:border-blue-400',
+                        barClass: 'bg-blue-500',
+                        icon: `<svg class="w-6 h-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>`,
+                        label: 'เทคโนโลยี'
+                    };
+                }
+                
+                // 2. ART
+                if(n.includes('วาดภาพ') || n.includes('จิตรกรรม') || n.includes('ประติมากรรม') || n.includes('ปั้น') || n.includes('ฉีก') || n.includes('ศิลป์') || n.includes('ออกแบบ')) {
+                    return {
+                        theme: 'rose',
+                        colorClass: 'text-rose-600 bg-rose-50 border-rose-200 hover:border-rose-400',
+                        barClass: 'bg-rose-500',
+                        icon: `<svg class="w-6 h-6 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>`,
+                        label: 'ศิลปะ'
+                    };
+                }
+
+                // 3. CRAFTS / FOOD / HOME EC
+                if(n.includes('ประดิษฐ์') || n.includes('จักสาน') || n.includes('ใบตอง') || n.includes('อาหาร') || n.includes('น้ำพริก') || n.includes('แปรรูป') || n.includes('แกะสลัก') || n.includes('สวนถาด')) {
+                    return {
+                        theme: 'emerald',
+                        colorClass: 'text-emerald-600 bg-emerald-50 border-emerald-200 hover:border-emerald-400',
+                        barClass: 'bg-emerald-500',
+                        icon: `<svg class="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`, // Placeholder icon, ideally Hammer/Leaf
+                        label: 'การงานอาชีพ'
+                    };
+                }
+
+                // 4. MUSIC / PERFORMANCE
+                if(n.includes('ดนตรี') || n.includes('เพลง') || n.includes('ระนาด') || n.includes('ฆ้อง') || n.includes('ขลุ่ย') || n.includes('ขับร้อง') || n.includes('รำวง') || n.includes('นาฏศิลป์')) {
+                    return {
+                        theme: 'violet',
+                        colorClass: 'text-violet-600 bg-violet-50 border-violet-200 hover:border-violet-400',
+                        barClass: 'bg-violet-500',
+                        icon: `<svg class="w-6 h-6 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" /></svg>`,
+                        label: 'ดนตรี/นาฏศิลป์'
+                    };
+                }
+
+                // 5. SPORTS / AEROBIC
+                if(n.includes('แอโรบิค') || n.includes('มวย') || n.includes('กีฬา')) {
+                    return {
+                        theme: 'red',
+                        colorClass: 'text-red-600 bg-red-50 border-red-200 hover:border-red-400',
+                        barClass: 'bg-red-500',
+                        icon: `<svg class="w-6 h-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>`,
+                        label: 'กีฬา/สุขภาพ'
+                    };
+                }
+
+                // DEFAULT: ACADEMIC / GENERAL
+                return {
+                    theme: 'amber',
+                    colorClass: 'text-amber-700 bg-amber-50 border-amber-200 hover:border-amber-400',
+                    barClass: 'bg-amber-500',
+                    icon: `<svg class="w-6 h-6 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>`,
+                    label: 'วิชาการ'
+                };
+            },
+
+            processData: function() {
+                const groups = {};
+                this.rawData.forEach(row => {
+                    const id = row.id;
+                    if (!groups[id]) {
+                        groups[id] = { id: id, name: row.name, level: row.level, teams: [] };
+                    }
+                    const scoreEntry = this.savedScores
+                        .filter(s => s.activityId == id && s.school == row.school)
+                        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                    groups[id].teams.push({
+                        school: row.school, students: row.students, teacher: row.teacher,
+                        score: scoreEntry ? scoreEntry.score : null, medal: scoreEntry ? scoreEntry.medal : null
+                    });
+                });
+                this.groupedData = Object.values(groups);
+            },
+
+            renderActivityList: function() {
+                const grid = document.getElementById('activity-grid');
+                grid.innerHTML = '';
+                if(this.groupedData.length === 0) { document.getElementById('no-result').classList.remove('hidden'); return; }
+
+                this.groupedData.forEach(act => {
+                    const scoredCount = act.teams.filter(t => t.score !== null).length;
+                    const totalCount = act.teams.length;
+                    const percent = totalCount > 0 ? Math.round((scoredCount / totalCount) * 100) : 0;
+                    
+                    // Style logic
+                    const style = this.getCategoryInfo(act.name);
+                    const isComplete = percent === 100;
+
+                    const div = document.createElement('div');
+                    div.className = `activity-card bg-white rounded-2xl p-0 border border-slate-100 relative group overflow-hidden cursor-pointer h-full flex flex-col`;
+                    div.onclick = () => this.openScoreForm(act.id);
+                    
+                    // HTML Structure
+                    div.innerHTML = `
+                        <div class="p-6 flex-1 flex flex-col">
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="p-2.5 rounded-xl ${style.colorClass.split('hover')[0]}">
+                                        ${style.icon}
+                                    </div>
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-100 px-2 py-1 rounded-md">${act.id}</span>
+                                </div>
+                                <button onclick="event.stopPropagation(); app.askPrintType('${act.id}')" 
+                                    class="text-slate-300 hover:text-indigo-600 hover:bg-indigo-50 p-2 rounded-full transition transform hover:scale-110" title="พิมพ์">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                                </button>
+                            </div>
+                            
+                            <h3 class="font-bold text-slate-800 text-lg mb-2 line-clamp-2 leading-snug group-hover:text-indigo-600 transition">${act.name}</h3>
+                            <div class="mt-auto">
+                                <span class="inline-block text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full mb-4">${act.level}</span>
+                                
+                                <div class="flex justify-between items-end mb-1">
+                                    <span class="text-xs font-medium text-slate-400">${style.label}</span>
+                                    <span class="text-xs font-bold ${isComplete ? 'text-green-600' : 'text-slate-600'}">${scoredCount}/${totalCount}</span>
+                                </div>
+                                <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                                    <div class="${style.barClass} h-2 rounded-full transition-all duration-1000 ease-out" style="width: ${percent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="h-1 w-full ${isComplete ? 'bg-green-500' : 'bg-transparent'}"></div>
+                    `;
+                    grid.appendChild(div);
+                });
+            },
+
+            openScoreForm: function(actId) {
+                const act = this.groupedData.find(a => a.id === actId);
+                if (!act) return;
+
+                // Set styling for header based on category
+                const style = this.getCategoryInfo(act.name);
+                const headerEl = document.getElementById('score-header');
+                
+                // Dynamic header color
+                let gradient = 'from-slate-800 to-slate-900';
+                if(style.theme === 'rose') gradient = 'from-rose-600 to-pink-700';
+                if(style.theme === 'blue') gradient = 'from-blue-600 to-indigo-700';
+                if(style.theme === 'emerald') gradient = 'from-emerald-600 to-teal-700';
+                if(style.theme === 'violet') gradient = 'from-violet-600 to-purple-700';
+                if(style.theme === 'amber') gradient = 'from-amber-600 to-orange-700';
+                if(style.theme === 'red') gradient = 'from-red-600 to-rose-700';
+
+                headerEl.className = `p-8 text-white relative overflow-hidden bg-gradient-to-r ${gradient}`;
+
+                document.getElementById('score-title').innerText = act.name;
+                document.getElementById('score-level').innerText = act.level;
+                document.getElementById('score-id').innerText = `ID: ${act.id}`;
+
+                const list = document.getElementById('team-list');
+                list.innerHTML = '';
+
+                act.teams.forEach((team, index) => {
+                    const medal = this.calculateMedal(team.score);
+                    const medalColor = this.getMedalColor(medal);
+                    const safeSchool = team.school.replace(/["']/g, ""); 
+
+                    const div = document.createElement('div');
+                    div.className = 'bg-white border border-slate-200 p-5 rounded-xl shadow-sm flex flex-col md:flex-row gap-5 items-start md:items-center transition hover:border-indigo-300 hover:shadow-md';
+                    div.innerHTML = `
+                        <div class="flex-none flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 text-slate-500 font-bold text-sm">
+                            ${index + 1}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="font-bold text-slate-800 text-lg truncate">${team.school}</h4>
+                            <div class="mt-2 space-y-1">
+                                <p class="text-sm text-slate-600 flex items-start"><span class="w-16 text-xs uppercase font-bold text-slate-400 mt-0.5">นักเรียน</span> <span>${team.students}</span></p>
+                                <p class="text-sm text-slate-600 flex items-start"><span class="w-16 text-xs uppercase font-bold text-slate-400 mt-0.5">ครู</span> <span>${team.teacher}</span></p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3 w-full md:w-auto bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <div class="relative">
+                                <input type="number" min="0" max="100" placeholder="0"
+                                    id="input-${index}"
+                                    value="${team.score !== null ? team.score : ''}" 
+                                    class="w-24 pl-3 pr-3 py-2 border border-slate-300 rounded-lg text-center font-bold text-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none shadow-sm text-slate-700"
+                                >
+                                <span class="absolute top-0 right-0 -mt-2 -mr-2 text-[10px] bg-white border px-1 rounded text-slate-400">คะแนน</span>
+                            </div>
+                            <button onclick="app.submitScore('${act.id}', '${safeSchool}', ${index})" 
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white p-2.5 rounded-lg shadow-md transition active:scale-95">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+                            </button>
+                        </div>
+                        <div id="badge-${index}" class="hidden md:flex flex-col items-center justify-center w-24 ml-2">
+                             <span class="text-[10px] text-slate-400 uppercase font-bold tracking-widest mb-1">ผลรางวัล</span>
+                             <span class="text-sm font-bold px-3 py-1.5 rounded-lg border ${medalColor} w-full text-center shadow-sm whitespace-nowrap">${medal}</span>
+                        </div>
+                    `;
+                    list.appendChild(div);
+                });
+
+                this.showPage('score');
+            },
+
+            // ... (submitScore, calculateMedal, getMedalColor logic remains similar but styled) ...
+            submitScore: async function(actId, schoolName, index) {
+                const input = document.getElementById(`input-${index}`);
+                const scoreVal = input.value;
+                if(scoreVal === '' || scoreVal < 0 || scoreVal > 100) { Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกคะแนน 0-100', 'warning'); return; }
+                const score = parseFloat(scoreVal);
+                const medal = this.calculateMedal(score);
+                const btn = input.nextElementSibling;
+                const originalContent = btn.innerHTML;
+                btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
+                btn.disabled = true;
+                try {
+                    const payload = { activityId: actId, school: schoolName, score: score, medal: medal };
+                    await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    const actIdx = this.groupedData.findIndex(a => a.id === actId);
+                    const teamIdx = this.groupedData[actIdx].teams.findIndex(t => t.school === schoolName);
+                    if(teamIdx >= 0) { this.groupedData[actIdx].teams[teamIdx].score = score; this.groupedData[actIdx].teams[teamIdx].medal = medal; }
+                    const badge = document.getElementById(`badge-${index}`).querySelector('span:last-child');
+                    badge.innerText = medal;
+                    badge.className = `text-sm font-bold px-3 py-1.5 rounded-lg border w-full text-center shadow-sm whitespace-nowrap ${this.getMedalColor(medal)}`;
+                    const Toast = Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 1500, timerProgressBar: true });
+                    Toast.fire({ icon: 'success', title: 'บันทึกเรียบร้อย' });
+                } catch (e) { console.error(e); Swal.fire('เกิดข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์', 'error'); } 
+                finally { btn.innerHTML = originalContent; btn.disabled = false; }
+            },
+
+            calculateMedal: function(score) {
+                if(score === null || score === "") return "-";
+                const s = parseFloat(score);
+                if(s >= 80) return "ทอง";
+                if(s >= 70) return "เงิน";
+                if(s >= 60) return "ทองแดง";
+                return "เข้าร่วม";
+            },
+            
+            getMedalColor: function(medal) {
+                if(medal === 'ทอง') return 'bg-yellow-50 text-yellow-700 border-yellow-200';
+                if(medal === 'เงิน') return 'bg-slate-50 text-slate-700 border-slate-200';
+                if(medal === 'ทองแดง') return 'bg-orange-50 text-orange-800 border-orange-200';
+                return 'bg-slate-50 text-slate-400 border-slate-100';
+            },
+
+            showPage: function(pageId) {
+                document.getElementById('page-home').classList.add('hidden');
+                document.getElementById('page-score').classList.add('hidden');
+                document.getElementById('page-summary').classList.add('hidden');
+                document.getElementById('page-' + pageId).classList.remove('hidden');
+                window.scrollTo(0,0);
+                if(pageId === 'home') this.renderActivityList();
+                if(pageId === 'summary') this.updateLeaderboard();
+            },
+
+            stopLoading: function() { document.getElementById('loading').classList.add('hidden'); },
+
+            filterActivities: function() {
+                const term = document.getElementById('search-box').value.toLowerCase();
+                const grid = document.getElementById('activity-grid');
+                const cards = grid.getElementsByClassName('activity-card');
+                let found = false;
+                Array.from(cards).forEach(card => {
+                    const text = card.textContent.toLowerCase();
+                    if(text.includes(term)) { card.classList.remove('hidden'); card.classList.add('flex'); found = true; } 
+                    else { card.classList.add('hidden'); card.classList.remove('flex'); }
+                });
+                const noResult = document.getElementById('no-result');
+                if(!found) { noResult.classList.remove('hidden'); noResult.classList.add('flex'); } 
+                else { noResult.classList.add('hidden'); noResult.classList.remove('flex'); }
+            },
+
+            updateLeaderboard: function() {
+                const schools = {};
+                this.groupedData.forEach(act => {
+                    act.teams.forEach(t => {
+                        if(!schools[t.school]) schools[t.school] = { gold:0, silver:0, bronze:0, total:0 };
+                        const m = this.calculateMedal(t.score);
+                        if(m === 'ทอง') schools[t.school].gold++;
+                        if(m === 'เงิน') schools[t.school].silver++;
+                        if(m === 'ทองแดง') schools[t.school].bronze++;
+                        if(m !== '-') schools[t.school].total++;
+                    });
+                });
+                const sorted = Object.keys(schools).sort((a,b) => {
+                    if(schools[b].gold !== schools[a].gold) return schools[b].gold - schools[a].gold;
+                    if(schools[b].silver !== schools[a].silver) return schools[b].silver - schools[a].silver;
+                    return schools[b].bronze - schools[a].bronze;
+                });
+                const tbody = document.getElementById('leaderboard-body');
+                tbody.innerHTML = '';
+                sorted.forEach((name, idx) => {
+                    const s = schools[name];
+                    if(s.total === 0 && s.gold === 0) return;
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
+                            <td class="px-6 py-4 font-medium text-slate-700 flex items-center">
+                                <span class="w-6 text-slate-300 font-bold mr-2 text-xs">${idx+1}</span> ${name}
+                            </td>
+                            <td class="px-4 py-4 text-center"><span class="bg-yellow-100 text-yellow-800 text-xs font-bold px-2.5 py-1 rounded-md border border-yellow-200">${s.gold}</span></td>
+                            <td class="px-4 py-4 text-center"><span class="bg-slate-100 text-slate-600 text-xs font-bold px-2.5 py-1 rounded-md border border-slate-200">${s.silver}</span></td>
+                            <td class="px-4 py-4 text-center"><span class="bg-orange-100 text-orange-800 text-xs font-bold px-2.5 py-1 rounded-md border border-orange-200">${s.bronze}</span></td>
+                            <td class="px-4 py-4 text-center font-bold text-slate-800">${s.gold + s.silver + s.bronze}</td>
+                        </tr>
+                    `;
+                });
+                const logs = document.getElementById('recent-logs');
+                logs.innerHTML = '';
+                let allScores = [];
+                this.groupedData.forEach(act => { act.teams.forEach(t => { if(t.score !== null) allScores.push({...t, actName: act.name}); }); });
+                allScores.slice(0, 10).forEach(item => {
+                    logs.innerHTML += `
+                        <li class="flex items-start p-4 border-b border-slate-50 hover:bg-slate-50 transition">
+                            <div class="h-8 w-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mr-3 flex-shrink-0 font-bold text-xs">
+                                ${item.score}
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-slate-800">${item.school}</p>
+                                <p class="text-xs text-slate-500 line-clamp-1 mt-0.5">${item.actName}</p>
+                            </div>
+                        </li>
+                    `;
+                });
+            },
+            
+            exportToCSV: function() {
+                let csv = "\uFEFFActivity,School,Students,Teacher,Score,Medal\n";
+                this.groupedData.forEach(act => {
+                    act.teams.forEach(t => {
+                        const m = this.calculateMedal(t.score);
+                        csv += `"${act.name}","${t.school}","${t.students}","${t.teacher}","${t.score||''}","${m}"\n`;
+                    });
+                });
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = "competition_results.csv";
+                link.click();
+            },
+            
+            askPrintType: function(actId) {
+                Swal.fire({
+                    title: '🖨️ เลือกรูปแบบการพิมพ์',
+                    text: 'ต้องการพิมพ์แบบฟอร์มเปล่า หรือแบบที่มีคะแนน?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'แบบฟอร์มเปล่า',
+                    confirmButtonColor: '#3b82f6',
+                    cancelButtonText: 'พร้อมคะแนน',
+                    cancelButtonColor: '#10b981',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) this.printPDF(actId, true);
+                    else if (result.dismiss === Swal.DismissReason.cancel) this.printPDF(actId, false);
+                });
+            },
+
+            printPDF: function(actId, isBlank) {
+                const act = this.groupedData.find(a => a.id === actId);
+                if (!act) return;
+                const body = [[
+                    { text: 'ที่', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' },
+                    { text: 'โรงเรียน', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' },
+                    { text: 'รายชื่อนักเรียน', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' },
+                    { text: 'ครูผู้ฝึกสอน', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' },
+                    { text: 'คะแนน', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' },
+                    { text: 'หมายเหตุ', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' }
+                ]];
+                act.teams.forEach((team, index) => {
+                    const students = team.students.split(',').map(s => s.trim()).join('\n');
+                    const teachers = team.teacher.split(',').map(t => t.trim()).join('\n');
+                    let scoreDisplay = (!isBlank && team.score !== null) ? team.score : '';
+                    body.push([
+                        { text: index + 1, alignment: 'center' },
+                        { text: team.school },
+                        { text: students },
+                        { text: teachers },
+                        { text: scoreDisplay, alignment: 'center' }, 
+                        { text: '', alignment: 'center' }
+                    ]);
+                });
+                let titleText = isBlank ? 'แบบบันทึกคะแนนการแข่งขันศิลปหัตถกรรมนักเรียน' : 'ใบสรุปคะแนนการแข่งขันศิลปหัตถกรรมนักเรียน';
+                const docDefinition = {
+                    content: [
+                        { text: titleText, style: 'header' },
+                        { text: `รายการ: ${act.name} (${act.level})`, style: 'subheader' },
+                        { text: 'กลุ่มสุวรรณโยธิน ครั้งที่ 73 ประจำปีการศึกษา 2568', style: 'subheader_small' },
+                        { text: '\n' },
+                        {
+                            table: { headerRows: 1, widths: [25, '*', 120, 100, 40, 50], body: body },
+                            layout: { hLineWidth: (i) => 0.5, vLineWidth: (i) => 0.5, hLineColor: (i) => '#cbd5e1', vLineColor: (i) => '#cbd5e1' }
+                        },
+                        { text: '\n\n\n' },
+                        {
+                            columns: [
+                                { text: 'ลงชื่อ ................................................. กรรมการ', alignment: 'center' },
+                                { text: 'ลงชื่อ ................................................. กรรมการ', alignment: 'center' }
+                            ]
+                        }
+                    ],
+                    defaultStyle: { font: 'THSarabunNew', fontSize: 14 },
+                    styles: {
+                        header: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 5] },
+                        subheader: { fontSize: 14, bold: true, alignment: 'center', margin: [0, 0, 0, 2] },
+                        subheader_small: { fontSize: 13, alignment: 'center', margin: [0, 0, 0, 10] },
+                        tableHeader: { bold: true, fontSize: 12, color: '#334155' }
+                    }
+                };
+                try { pdfMake.createPdf(docDefinition).open(); } 
+                catch (e) { console.error("PDF Error:", e); Swal.fire('Error', 'ไม่สามารถสร้าง PDF ได้', 'error'); }
+            }
+        };
+
+        window.onload = () => app.init();
+    </script>
+</body>
+</html>
