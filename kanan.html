@@ -50,9 +50,20 @@
                 <p class="text-[10px] text-slate-500 font-medium">ศิลปหัตถกรรม ครั้งที่ 73</p>
             </div>
         </div>
-        <!-- Profile Picture (Placeholder for LIFF) -->
-        <div id="user-profile" class="hidden">
-            <img id="profile-img" src="" class="w-9 h-9 rounded-full border border-slate-200">
+        
+        <!-- LIFF Auth UI -->
+        <div class="flex items-center">
+            <!-- Login Button -->
+            <button id="btn-login" onclick="app.loginLIFF()" class="hidden bg-[#06C755] hover:bg-[#05b34c] text-white text-xs font-bold px-3 py-1.5 rounded-full transition shadow-sm flex items-center gap-1">
+                <svg viewBox="0 0 24 24" class="w-4 h-4 fill-current"><path d="M22 10.5V12a10 10 0 1 1-5-8.66l-1.56 1.25A8 8 0 1 0 20.44 12.7L22 10.5zm-1.8 1.9a1.1 1.1 0 0 1-1.35.34l-3-1.5-3 1.5c-.44.22-.96-.1-1-.59l-.66-3.47-2.6-2.4a1.1 1.1 0 0 1 .63-1.9l3.54-.42 1.48-3.32a1.06 1.06 0 0 1 1.96 0l1.48 3.32 3.54.42c.48.06.84.45.63.89l-2.6 2.4.66 3.47c.07.38.03.77-.36.96z"/></svg>
+                <span>เข้าสู่ระบบ</span>
+            </button>
+
+            <!-- Profile Picture & Name (After Login) -->
+            <div id="user-profile" onclick="app.logoutLIFF()" class="hidden flex items-center gap-2 bg-white/50 px-2 py-1 rounded-full border border-slate-100 shadow-sm transition-all hover:bg-white cursor-pointer" title="แตะเพื่อออกจากระบบ">
+                <span id="profile-name" class="text-xs font-bold text-slate-700 truncate max-w-[80px] text-right hidden sm:block"></span>
+                <img id="profile-img" src="" class="w-8 h-8 rounded-full border-2 border-white shadow-sm object-cover">
+            </div>
         </div>
     </nav>
 
@@ -153,16 +164,48 @@
 
             initLIFF: async function() {
                 try {
-                    if(LIFF_ID !== "1657704109-m7Qpqu4W") {
-                        await liff.init({ liffId: LIFF_ID });
-                        if (liff.isLoggedIn()) {
-                            const profile = await liff.getProfile();
-                            document.getElementById('profile-img').src = profile.pictureUrl;
-                            document.getElementById('user-profile').classList.remove('hidden');
-                        }
+                    // ถ้ายังไม่ได้ใส่ LIFF ID ให้ข้ามไปก่อน
+                    if(LIFF_ID === "1657704109-m7Qpqu4W") return;
+
+                    await liff.init({ liffId: LIFF_ID });
+                    
+                    if (!liff.isLoggedIn()) {
+                        // ยังไม่ล็อกอิน -> แสดงปุ่ม Login
+                        document.getElementById('btn-login').classList.remove('hidden');
+                        document.getElementById('user-profile').classList.add('hidden');
+                    } else {
+                        // ล็อกอินแล้ว -> แสดงโปรไฟล์
+                        this.showProfile();
                     }
                 } catch (err) {
                     console.error("LIFF Init failed", err);
+                }
+            },
+
+            loginLIFF: function() {
+                if (!liff.isLoggedIn()) {
+                    liff.login();
+                }
+            },
+
+            logoutLIFF: function() {
+                if (liff.isLoggedIn()) {
+                    liff.logout();
+                    window.location.reload(); // รีโหลดหน้าหลัง logout
+                }
+            },
+
+            showProfile: async function() {
+                try {
+                    const profile = await liff.getProfile();
+                    document.getElementById('profile-img').src = profile.pictureUrl;
+                    document.getElementById('profile-name').innerText = profile.displayName;
+                    
+                    // สลับการแสดงผล
+                    document.getElementById('btn-login').classList.add('hidden');
+                    document.getElementById('user-profile').classList.remove('hidden');
+                } catch (err) {
+                    console.error("Get Profile failed", err);
                 }
             },
 
