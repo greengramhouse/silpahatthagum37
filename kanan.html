@@ -158,31 +158,43 @@
             data: [],
             
             init: async function() {
-                this.initLIFF();
+                // รอให้ LIFF Init เสร็จก่อน เพื่อเช็คสถานะ Login
+                await this.initLIFF();
                 await this.fetchData();
             },
 
             initLIFF: async function() {
                 try {
-                    // ถ้ายังไม่ได้ใส่ LIFF ID ให้ข้ามไปก่อน
-                    if(LIFF_ID === "1657704109-m7Qpqu4W") return;
+                    // ถ้าเป็นค่า Placeholder ค่อยข้าม (แก้เงื่อนไขให้ถูกต้อง)
+                    if(LIFF_ID === "YOUR_LIFF_ID_HERE" || LIFF_ID === "") {
+                        console.warn("LIFF ID not configured");
+                        return;
+                    }
 
                     await liff.init({ liffId: LIFF_ID });
                     
+                    // เช็คว่า User เปิดใน App LINE หรือ Browser
                     if (!liff.isLoggedIn()) {
                         // ยังไม่ล็อกอิน -> แสดงปุ่ม Login
                         document.getElementById('btn-login').classList.remove('hidden');
                         document.getElementById('user-profile').classList.add('hidden');
+                        
+                        // ถ้าเปิดใน LINE App ให้ Login อัตโนมัติ (Optional)
+                        if (liff.isInClient()) {
+                            liff.login();
+                        }
                     } else {
                         // ล็อกอินแล้ว -> แสดงโปรไฟล์
                         this.showProfile();
                     }
                 } catch (err) {
                     console.error("LIFF Init failed", err);
+                    Swal.fire('Connection Error', 'ไม่สามารถเชื่อมต่อกับ LINE ได้ (' + err.code + ')', 'error');
                 }
             },
 
             loginLIFF: function() {
+                // เช็คก่อนเรียก Login เพื่อป้องกัน Error ซ้ำซ้อน
                 if (!liff.isLoggedIn()) {
                     liff.login();
                 }
