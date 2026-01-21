@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ประกาศผลการแข่งขัน - ศิลปหัตถกรรม</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- LINE LIFF SDK -->
+    <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Noto Sans Thai', 'sans-serif'] },
+                    colors: {
+                        line: '#06C755', // LINE Green
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body { background-color: #f8fafc; -webkit-tap-highlight-color: transparent; }
+        .glass-nav { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .shimmer { animation: shimmer 2s infinite linear; background: linear-gradient(to right, #f6f7f8 0%, #edeef1 20%, #f6f7f8 40%, #f6f7f8 100%); background-size: 1000px 100%; }
+        @keyframes shimmer { 0% { background-position: -1000px 0; } 100% { background-position: 1000px 0; } }
+    </style>
+</head>
+<body class="text-slate-800 pb-20">
+
+    <!-- Navbar (Fixed Top) -->
+    <nav class="glass-nav fixed top-0 w-full z-50 h-16 flex items-center justify-between px-4 shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-indigo-200 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" /></svg>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg leading-none">ประกาศผลรางวัล</h1>
+                <p class="text-[10px] text-slate-500 font-medium">ศิลปหัตถกรรม ครั้งที่ 73</p>
+            </div>
+        </div>
+        <!-- Profile Picture (Placeholder for LIFF) -->
+        <div id="user-profile" class="hidden">
+            <img id="profile-img" src="" class="w-9 h-9 rounded-full border border-slate-200">
+        </div>
+    </nav>
+
+    <!-- Content Container -->
+    <div class="container mx-auto px-4 mt-20 max-w-lg">
+        
+        <!-- Search Bar -->
+        <div class="relative mb-6">
+            <input type="text" id="search-box" onkeyup="app.filterResults()" 
+                placeholder="ค้นหารายการ หรือ โรงเรียน..." 
+                class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm">
+            <svg class="w-5 h-5 text-slate-400 absolute left-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+        </div>
+
+        <!-- Filter Tags -->
+        <div class="flex gap-2 overflow-x-auto hide-scrollbar mb-6 pb-2">
+            <button onclick="app.filterCategory('all')" class="flex-shrink-0 px-4 py-1.5 rounded-full bg-slate-800 text-white text-xs font-bold shadow-md active:scale-95 transition">ทั้งหมด</button>
+            <button onclick="app.filterCategory('art')" class="flex-shrink-0 px-4 py-1.5 rounded-full bg-white text-rose-600 border border-rose-100 text-xs font-bold shadow-sm active:scale-95 transition">🎨 ศิลปะ</button>
+            <button onclick="app.filterCategory('tech')" class="flex-shrink-0 px-4 py-1.5 rounded-full bg-white text-blue-600 border border-blue-100 text-xs font-bold shadow-sm active:scale-95 transition">💻 คอมฯ</button>
+            <button onclick="app.filterCategory('craft')" class="flex-shrink-0 px-4 py-1.5 rounded-full bg-white text-emerald-600 border border-emerald-100 text-xs font-bold shadow-sm active:scale-95 transition">🛠️ การงาน</button>
+            <button onclick="app.filterCategory('music')" class="flex-shrink-0 px-4 py-1.5 rounded-full bg-white text-violet-600 border border-violet-100 text-xs font-bold shadow-sm active:scale-95 transition">🎵 ดนตรี</button>
+        </div>
+
+        <!-- Loading Skeleton -->
+        <div id="loading-skeleton" class="space-y-4">
+            <!-- Items -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 h-32 w-full shimmer"></div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 h-32 w-full shimmer"></div>
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 h-32 w-full shimmer"></div>
+        </div>
+
+        <!-- Results List -->
+        <div id="results-list" class="space-y-4 hidden pb-10">
+            <!-- Javascript will populate this -->
+        </div>
+        
+        <div id="no-result" class="hidden flex-col items-center justify-center py-10 text-slate-400">
+            <p>ไม่พบข้อมูล</p>
+        </div>
+
+    </div>
+
+    <!-- Modal for Details -->
+    <div id="detail-modal" class="fixed inset-0 z-[60] hidden">
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="app.closeModal()"></div>
+        <div class="absolute bottom-0 left-0 right-0 md:inset-0 md:flex md:items-center md:justify-center p-0 md:p-4">
+            <div class="bg-white rounded-t-3xl md:rounded-2xl w-full md:max-w-md max-h-[85vh] flex flex-col shadow-2xl transform transition-transform duration-300 translate-y-full md:translate-y-0" id="modal-panel">
+                
+                <!-- Handle for mobile swipe (Visual only) -->
+                <div class="w-full flex justify-center pt-3 pb-1 md:hidden" onclick="app.closeModal()">
+                    <div class="w-12 h-1.5 bg-slate-200 rounded-full"></div>
+                </div>
+
+                <!-- Modal Header -->
+                <div class="px-6 pt-2 pb-4 border-b border-slate-100">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <span id="modal-level" class="text-[10px] font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2 py-0.5 rounded"></span>
+                            <h3 id="modal-title" class="text-xl font-bold text-slate-800 mt-2 leading-snug"></h3>
+                        </div>
+                        <button onclick="app.closeModal()" class="bg-slate-100 p-2 rounded-full text-slate-400 hover:text-slate-600 hidden md:block">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-0 overflow-y-auto flex-1 bg-slate-50" id="modal-content">
+                    <!-- Dynamic Content -->
+                </div>
+
+                <!-- Modal Footer (Share) -->
+                <div class="p-4 bg-white border-t border-slate-100">
+                    <button id="btn-share" class="w-full bg-[#06C755] hover:bg-[#05b34c] text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-green-200 flex items-center justify-center gap-2 transition active:scale-95">
+                        <svg viewBox="0 0 24 24" class="w-6 h-6 fill-current"><path d="M22 10.5V12a10 10 0 1 1-5-8.66l-1.56 1.25A8 8 0 1 0 20.44 12.7L22 10.5zm-1.8 1.9a1.1 1.1 0 0 1-1.35.34l-3-1.5-3 1.5c-.44.22-.96-.1-1-.59l-.66-3.47-2.6-2.4a1.1 1.1 0 0 1 .63-1.9l3.54-.42 1.48-3.32a1.06 1.06 0 0 1 1.96 0l1.48 3.32 3.54.42c.48.06.84.45.63.89l-2.6 2.4.66 3.47c.07.38.03.77-.36.96z"/></svg> <!-- Placeholder LINE icon -->
+                        <span>แชร์ผลการแข่งขันนี้</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        //  CONFIGURATION 
+        // ==========================================
+        const API_URL = "https://script.google.com/macros/s/AKfycbw6xihHx01eYPQlJ8jH7mtFjM6XFUGIoVc3JvCnVEl4i9nfSHFqDCqQQCO3F1JDgv_k/exec"; 
+        const LIFF_ID = "1657704109-m7Qpqu4W"; // ใส่ LIFF ID ที่ได้จาก Line Developers
+        // ==========================================
+
+        const app = {
+            data: [],
+            
+            init: async function() {
+                this.initLIFF();
+                await this.fetchData();
+            },
+
+            initLIFF: async function() {
+                try {
+                    if(LIFF_ID !== "1657704109-m7Qpqu4W") {
+                        await liff.init({ liffId: LIFF_ID });
+                        if (liff.isLoggedIn()) {
+                            const profile = await liff.getProfile();
+                            document.getElementById('profile-img').src = profile.pictureUrl;
+                            document.getElementById('user-profile').classList.remove('hidden');
+                        }
+                    }
+                } catch (err) {
+                    console.error("LIFF Init failed", err);
+                }
+            },
+
+            fetchData: async function() {
+                try {
+                    if(API_URL.includes("PLACEHOLDER")) {
+                        // Mock Data for demo if URL not set
+                        this.processData(this.getMockData());
+                        return;
+                    }
+
+                    const response = await fetch(API_URL);
+                    const json = await response.json();
+                    
+                    // Group data logic (Same as Main App)
+                    this.processRawData(json.competitions, json.savedScores);
+
+                } catch (error) {
+                    console.error("Fetch Error", error);
+                    // Fallback to mock data for preview
+                    this.processData(this.getMockData()); 
+                }
+            },
+
+            processRawData: function(competitions, scores) {
+                const groups = {};
+                competitions.forEach(row => {
+                    if (!groups[row.id]) {
+                        groups[row.id] = { id: row.id, name: row.name, level: row.level, teams: [] };
+                    }
+                    const scoreEntry = scores
+                        .filter(s => s.activityId == row.id && s.school == row.school)
+                        .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
+                    
+                    groups[row.id].teams.push({
+                        school: row.school, 
+                        students: row.students, 
+                        teacher: row.teacher,
+                        score: scoreEntry ? scoreEntry.score : null, 
+                        medal: scoreEntry ? scoreEntry.medal : null
+                    });
+                });
+                
+                // Convert to array and sort teams by score desc
+                this.data = Object.values(groups).map(act => {
+                    act.teams.sort((a, b) => (b.score || 0) - (a.score || 0));
+                    return act;
+                });
+                
+                this.renderList(this.data);
+            },
+            
+            // Mock Data for preview purposes
+            getMockData: function() { 
+                return []; // Logic moved to processRawData mainly
+            },
+
+            // --- RENDER LOGIC ---
+            renderList: function(items) {
+                const container = document.getElementById('results-list');
+                const skeleton = document.getElementById('loading-skeleton');
+                container.innerHTML = '';
+                
+                if(items.length === 0) {
+                    skeleton.classList.add('hidden');
+                    document.getElementById('no-result').classList.remove('hidden');
+                    return;
+                }
+
+                items.forEach(act => {
+                    // Check completion
+                    const scoredTeams = act.teams.filter(t => t.score !== null);
+                    const isCompleted = scoredTeams.length > 0 && scoredTeams.length === act.teams.length;
+                    const topTeam = scoredTeams.length > 0 ? scoredTeams[0] : null;
+                    
+                    // Style
+                    const style = this.getCategoryStyle(act.name);
+
+                    const div = document.createElement('div');
+                    div.className = "bg-white rounded-2xl p-5 shadow-sm border border-slate-100 relative overflow-hidden transition active:scale-[0.98]";
+                    div.onclick = () => this.openModal(act);
+
+                    let winnerHTML = '';
+                    if (topTeam && topTeam.medal === 'ทอง') {
+                        winnerHTML = `
+                            <div class="mt-4 pt-3 border-t border-slate-50 flex items-center gap-3">
+                                <span class="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-lg">🥇</span>
+                                <div class="min-w-0">
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase">ชนะเลิศอันดับ 1</p>
+                                    <p class="text-sm font-bold text-slate-800 truncate">${topTeam.school}</p>
+                                </div>
+                            </div>
+                        `;
+                    } else if (scoredTeams.length === 0) {
+                        winnerHTML = `
+                             <div class="mt-4 pt-3 border-t border-slate-50 flex items-center gap-2 opacity-50">
+                                <div class="w-2 h-2 bg-slate-300 rounded-full animate-pulse"></div>
+                                <p class="text-xs text-slate-400">ยังไม่มีการประกาศผล</p>
+                            </div>
+                        `;
+                    }
+
+                    div.innerHTML = `
+                        <div class="absolute top-0 left-0 w-1.5 h-full ${style.barClass}"></div>
+                        <div class="pl-3">
+                            <div class="flex justify-between items-start mb-2">
+                                <span class="bg-slate-100 text-slate-500 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">${act.id}</span>
+                                <span class="text-[10px] font-bold ${isCompleted ? 'text-green-600 bg-green-50 px-2 py-0.5 rounded-full' : 'text-slate-400'}">
+                                    ${isCompleted ? 'ประกาศผลแล้ว' : 'กำลังดำเนินการ'}
+                                </span>
+                            </div>
+                            <h3 class="font-bold text-slate-800 text-lg leading-snug line-clamp-2 mb-1">${act.name}</h3>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs text-white px-2 py-0.5 rounded-md ${style.bgClass}">${style.label}</span>
+                                <span class="text-xs text-slate-400 font-medium">${act.level}</span>
+                            </div>
+                            ${winnerHTML}
+                        </div>
+                    `;
+                    container.appendChild(div);
+                });
+
+                skeleton.classList.add('hidden');
+                container.classList.remove('hidden');
+            },
+
+            openModal: function(act) {
+                const modal = document.getElementById('detail-modal');
+                const panel = document.getElementById('modal-panel');
+                const content = document.getElementById('modal-content');
+                const btnShare = document.getElementById('btn-share');
+
+                document.getElementById('modal-title').innerText = act.name;
+                document.getElementById('modal-level').innerText = act.level;
+                
+                // Render Teams
+                content.innerHTML = '';
+                
+                if(act.teams.every(t => t.score === null)) {
+                    content.innerHTML = `
+                        <div class="flex flex-col items-center justify-center h-64 text-slate-400">
+                            <svg class="w-16 h-16 mb-4 opacity-20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
+                            <p>ยังไม่มีผลการแข่งขัน</p>
+                        </div>`;
+                } else {
+                    act.teams.forEach((team, idx) => {
+                        if(team.score === null) return;
+                        
+                        let rankIcon = `<span class="text-slate-400 font-bold text-sm w-6 text-center">${idx+1}</span>`;
+                        let bgClass = "bg-white";
+                        
+                        if(idx === 0) { rankIcon = "🥇"; bgClass = "bg-yellow-50/50 border-yellow-100"; }
+                        else if(idx === 1) { rankIcon = "🥈"; }
+                        else if(idx === 2) { rankIcon = "🥉"; }
+
+                        const medalColor = this.getMedalColor(team.medal);
+
+                        content.innerHTML += `
+                            <div class="p-4 border-b border-slate-100 ${bgClass} flex items-start gap-3">
+                                <div class="flex-shrink-0 pt-1 text-xl w-8 text-center">${rankIcon}</div>
+                                <div class="flex-1 min-w-0">
+                                    <h4 class="font-bold text-slate-800 text-sm truncate">${team.school}</h4>
+                                    <div class="mt-1 space-y-0.5">
+                                        <p class="text-xs text-slate-500 truncate"><span class="font-semibold">นร:</span> ${team.students}</p>
+                                        <p class="text-xs text-slate-500 truncate"><span class="font-semibold">ครู:</span> ${team.teacher}</p>
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end gap-1">
+                                    <span class="text-xs font-bold ${medalColor} px-2 py-0.5 rounded border text-center min-w-[60px]">${team.medal}</span>
+                                    <span class="text-[10px] text-slate-400 font-mono">${team.score} คะแนน</span>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Setup Share Button
+                btnShare.onclick = () => this.shareResult(act);
+
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    panel.classList.remove('translate-y-full');
+                }, 10);
+            },
+
+            closeModal: function() {
+                const modal = document.getElementById('detail-modal');
+                const panel = document.getElementById('modal-panel');
+                panel.classList.add('translate-y-full');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                }, 300);
+            },
+
+            // --- LIFF SHARE LOGIC ---
+            shareResult: async function(act) {
+                if (!liff.isInClient() && !liff.isLoggedIn()) {
+                    Swal.fire('แจ้งเตือน', 'ฟีเจอร์นี้ใช้งานได้บนแอป LINE เท่านั้น', 'info');
+                    return;
+                }
+
+                // Construct Flex Message
+                const topTeams = act.teams.filter(t => t.score !== null).slice(0, 3);
+                
+                // Build body contents (Top 3 list)
+                const bodyContents = topTeams.map((team, index) => {
+                    let icon = "🏆";
+                    let color = "#E6B800"; // Gold
+                    if(index === 1) { icon = "🥈"; color = "#A3A3A3"; }
+                    if(index === 2) { icon = "🥉"; color = "#CD7F32"; }
+
+                    return {
+                        "type": "box",
+                        "layout": "horizontal",
+                        "contents": [
+                            { "type": "text", "text": icon, "size": "sm", "flex": 0 },
+                            { "type": "text", "text": team.school, "size": "sm", "color": "#111111", "flex": 4, "wrap": true, "weight": "bold", "margin": "sm" },
+                            { "type": "text", "text": team.medal, "size": "xs", "color": color, "align": "end", "gravity": "center" }
+                        ],
+                        "margin": "md"
+                    };
+                });
+                
+                if(bodyContents.length === 0) {
+                     bodyContents.push({ "type": "text", "text": "ยังไม่มีผลการแข่งขัน", "size": "sm", "color": "#aaaaaa", "align": "center" });
+                }
+
+                const flexMessage = {
+                    "type": "flex",
+                    "altText": `ประกาศผล: ${act.name}`,
+                    "contents": {
+                        "type": "bubble",
+                        "header": {
+                            "type": "box",
+                            "layout": "vertical",
+                            "contents": [
+                                { "type": "text", "text": "ประกาศผลรางวัล", "weight": "bold", "color": "#06C755", "size": "xxs" },
+                                { "type": "text", "text": act.name, "weight": "bold", "size": "md", "wrap": true, "margin": "xs" },
+                                { "type": "text", "text": `ระดับชั้น ${act.level}`, "size": "xs", "color": "#aaaaaa", "margin": "xs" }
+                            ]
+                        },
+                        "hero": {
+                            "type": "image",
+                            "url": "https://cdn-icons-png.flaticon.com/512/3112/3112946.png", // Generic Trophy Icon
+                            "size": "full",
+                            "aspectRatio": "20:13",
+                            "aspectMode": "cover",
+                        },
+                        "body": {
+                            "type": "box",
+                            "layout": "vertical",
+                            "contents": [
+                                { "type": "text", "text": "สรุปเหรียญรางวัล", "weight": "bold", "size": "sm", "margin": "md" },
+                                { "type": "separator", "margin": "sm" },
+                                ...bodyContents
+                            ]
+                        },
+                        "footer": {
+                            "type": "box",
+                            "layout": "vertical",
+                            "contents": [
+                                {
+                                    "type": "button",
+                                    "action": { "type": "uri", "label": "ดูผลทั้งหมด", "uri": "https://liff.line.me/" + LIFF_ID }, // Link back to app
+                                    "style": "primary",
+                                    "color": "#06C755"
+                                }
+                            ]
+                        }
+                    }
+                };
+
+                try {
+                    const res = await liff.shareTargetPicker([flexMessage]);
+                    if (res) {
+                        Swal.fire({ icon: 'success', title: 'แชร์เรียบร้อย', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
+                    }
+                } catch (error) {
+                    console.log('Share Error: ', error);
+                    // Fallback alert is handled by LIFF SDK usually, but logging helps
+                }
+            },
+
+            // --- UTILS ---
+            filterResults: function() {
+                const term = document.getElementById('search-box').value.toLowerCase();
+                const filtered = this.data.filter(act => 
+                    act.name.toLowerCase().includes(term) || 
+                    act.teams.some(t => t.school.toLowerCase().includes(term))
+                );
+                this.renderList(filtered);
+            },
+
+            filterCategory: function(cat) {
+                if(cat === 'all') { this.renderList(this.data); return; }
+                const filtered = this.data.filter(act => {
+                    const style = this.getCategoryStyle(act.name);
+                    // Simple mapping based on style labels/colors logic used in getCategoryStyle
+                    if(cat === 'art' && style.label === 'ศิลปะ') return true;
+                    if(cat === 'tech' && style.label === 'เทคโนโลยี') return true;
+                    if(cat === 'craft' && style.label === 'การงานฯ') return true;
+                    if(cat === 'music' && style.label === 'ดนตรี') return true;
+                    return false;
+                });
+                this.renderList(filtered);
+            },
+
+            getCategoryStyle: function(name) {
+                const n = name.toLowerCase();
+                if(n.includes('คอม') || n.includes('หุ่นยนต์') || n.includes('การ์ตูน')) 
+                    return { label: 'เทคโนโลยี', bgClass: 'bg-blue-500', barClass: 'bg-blue-500' };
+                if(n.includes('วาด') || n.includes('ศิลป์') || n.includes('ปั้น')) 
+                    return { label: 'ศิลปะ', bgClass: 'bg-rose-500', barClass: 'bg-rose-500' };
+                if(n.includes('ประดิษฐ์') || n.includes('อาหาร') || n.includes('สาน')) 
+                    return { label: 'การงานฯ', bgClass: 'bg-emerald-500', barClass: 'bg-emerald-500' };
+                if(n.includes('ดนตรี') || n.includes('เพลง') || n.includes('รำ')) 
+                    return { label: 'ดนตรี', bgClass: 'bg-violet-500', barClass: 'bg-violet-500' };
+                return { label: 'วิชาการ', bgClass: 'bg-amber-500', barClass: 'bg-amber-500' };
+            },
+
+            getMedalColor: function(medal) {
+                if(medal === 'ทอง') return 'text-yellow-700 bg-yellow-50 border-yellow-200';
+                if(medal === 'เงิน') return 'text-slate-600 bg-slate-100 border-slate-200';
+                if(medal === 'ทองแดง') return 'text-orange-700 bg-orange-50 border-orange-200';
+                return 'text-slate-400 border-slate-100';
+            }
+        };
+
+        // Auto Start
+        window.onload = () => app.init();
+
+    </script>
+</body>
+</html>
