@@ -54,7 +54,7 @@
         .activity-card:hover { transform: translateY(-4px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
     </style>
 </head>
-<body class="text-slate-800 flex flex-col min-h-screen pb-20">
+<body class="text-slate-800 flex flex-col min-h-screen">
 
     <!-- Loading Screen -->
     <div id="loading" class="loading-overlay">
@@ -107,7 +107,7 @@
                             <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
                         </svg>
                     </div>
-                    <input type="text" id="search-box" onkeyup="app.filterActivities()" 
+                    <input type="text" id="search-box" oninput="app.filterActivities()" 
                         placeholder="ค้นหากิจกรรม หรือ โรงเรียน..." 
                         class="block w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-xl leading-5 bg-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm shadow-sm transition">
                 </div>
@@ -212,14 +212,13 @@
     </div>
     
     <!-- Footer -->
-<footer class="bg-white border-t border-slate-200 py-4 fixed bottom-0 left-0 w-full z-50">
-    <div class="container mx-auto px-4 text-center">
-        <p class="text-sm text-slate-500">
-            จัดทำโดย <span class="font-semibold text-indigo-600">โรงเรียนชุมชนวัดไทยงาม</span> &copy; ปีการศึกษา 2568
-        </p>
-    </div>
-</footer>
-
+    <footer class="bg-white border-t border-slate-200 py-4 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-sm text-slate-500">
+                จัดทำโดย <span class="font-semibold text-indigo-600">โรงเรียนชุมชนวัดไทยงาม</span> &copy; ปีการศึกษา 2568
+            </p>
+        </div>
+    </footer>
 
     <!-- MAIN SCRIPT -->
     <script>
@@ -382,8 +381,15 @@
                     const style = this.getCategoryInfo(act.name);
                     const isComplete = percent === 100;
 
+                    // Collect all searchable text
+                    const schools = act.teams.map(t => t.school).join(' ');
+                    const students = act.teams.map(t => t.students).join(' ');
+                    const teachers = act.teams.map(t => t.teacher).join(' ');
+                    const searchText = `${act.id} ${act.name} ${act.level} ${schools} ${students} ${teachers}`.toLowerCase();
+
                     const div = document.createElement('div');
                     div.className = `activity-card bg-white rounded-2xl p-0 border border-slate-100 relative group overflow-hidden cursor-pointer h-full flex flex-col`;
+                    div.setAttribute('data-search', searchText);
                     div.onclick = () => this.openScoreForm(act.id);
                     
                     // HTML Structure
@@ -550,9 +556,15 @@
                 const cards = grid.getElementsByClassName('activity-card');
                 let found = false;
                 Array.from(cards).forEach(card => {
-                    const text = card.textContent.toLowerCase();
-                    if(text.includes(term)) { card.classList.remove('hidden'); card.classList.add('flex'); found = true; } 
-                    else { card.classList.add('hidden'); card.classList.remove('flex'); }
+                    const searchData = card.getAttribute('data-search');
+                    if(searchData && searchData.includes(term)) { 
+                        card.classList.remove('hidden'); 
+                        card.classList.add('flex'); // Ensure flex is restored
+                        found = true; 
+                    } else { 
+                        card.classList.add('hidden'); 
+                        card.classList.remove('flex'); 
+                    }
                 });
                 const noResult = document.getElementById('no-result');
                 if(!found) { noResult.classList.remove('hidden'); noResult.classList.add('flex'); } 
@@ -689,10 +701,10 @@
                     ],
                     defaultStyle: { font: 'THSarabunNew', fontSize: 14 },
                     styles: {
-                        header: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 5] },
-                        subheader: { fontSize: 14, bold: true, alignment: 'center', margin: [0, 0, 0, 2] },
-                        subheader_small: { fontSize: 13, alignment: 'center', margin: [0, 0, 0, 10] },
-                        tableHeader: { bold: true, fontSize: 12, color: '#334155' }
+                        header: { fontSize: 20, bold: true, alignment: 'center', margin: [0, 0, 0, 5] },
+                        subheader: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 2] },
+                        subheader_small: { fontSize: 14, alignment: 'center', margin: [0, 0, 0, 10] },
+                        tableHeader: { bold: true, fontSize: 14, color: '#334155' }
                     }
                 };
                 try { pdfMake.createPdf(docDefinition).open(); } 
