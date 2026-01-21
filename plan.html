@@ -170,12 +170,20 @@
             
             // Status: True
             { 
-                id: 'meet_l', floor: 1, name: 'โรงอาหาร', style: 'top: 5%; left: 50%; width: 25%; height: 30%;', status: true, color: '#f59e0b',
+                id: 'meet_l', floor: 1, name: 'โรงอาหาร', style: 'top: 5%; left: 50%; width: 25%; height: 30%;', status: false, color: '#f59e0b',
                 building: 'อาคารโรงอาหารกลาง', location: 'อาคารเอนกประสงค์', details: 'สถานที่รับประทานอาหารและจุดนัดพบหลัก'
+            }, 
+            { 
+                id: 'meet_2', floor: 1, name: 'น้ำพริกผักสด', style: 'top: 5%; left: 65%; width: 8%; height: 30%;', status: true, color: '#f59e0b',
+                building: 'อาคารโรงอาหารกลาง', location: 'หน้าเวที โรงอาหาร', details: 'แข่งขันน้ำพริกผักสด ระดับ'
             }, 
             { 
                 id: 'x503', floor: 1, name: 'หนังสือเล่มเล็ก', style: 'top: 55%; left: 80%; width: 15%; height: 10%;' , status: true, color: '#8b5cf6',
                 building: 'อาคาร 4 (สีเขียว)', location: 'ห้องสมุด', details: 'การแข่งขันทำหนังสือเล่มเล็ก ระดับ ป.4-6'
+            },
+            { 
+                id: 'x504', floor: 1, name: 'จักรสาน', style: 'top: 15%; left: 80%; width: 15%; height: 10%;' , status: true, color: '#8b5cf6',
+                building: 'อาคาร 4 (สีเขียว)', location: 'ใต้อาคาร 4', details: 'การแข่งขันจักรสาน'
             },
             { 
                 id: 'x501', floor: 1, name: 'ปั้นดินน้ำมัน', style: 'top: 60%; left: 60%; width: 15%; height: 10%;', status: true, color: '#ec4899',
@@ -205,10 +213,10 @@
 
             // --- ชั้น 2 (Floor 2) - เพิ่มข้อมูลจำลองสำหรับชั้น 2 ตรงนี้ ---
             // (คุณสามารถแก้ไขตำแหน่ง style และข้อมูลรายละเอียดได้เลย)
-            { id: 'f2r001', floor: 2, name: 'สนามกีฬา', style: 'top: 35%; left: 5%; width: 45%; height: 40%;', status: false },
-            { id: 'f2r101', floor: 2, name: 'อาคารชำนาญ-เพ็ญชาติ', style: 'top: 5%; left: 5%; width: 40%; height: 20%;', status: false  },
-            { id: 'f2r201', floor: 2, name: 'อาคาร 4 (สีเขียว)', style: 'top: 5%; left: 80%; width: 15%; height: 65%;', status: false },
-            { id: 'f2r202', floor: 2, name: '', style: 'top: 38%; left: 60%; width: 15%; height: 40%;', status: false },
+            { id: 'fr2r001', floor: 2, name: 'สนามกีฬา', style: 'top: 35%; left: 5%; width: 45%; height: 40%;', status: false },
+            { id: 'fr2r101', floor: 2, name: 'อาคารชำนาญ-เพ็ญชาติ', style: 'top: 5%; left: 5%; width: 40%; height: 20%;', status: false  },
+            { id: 'fr2r201', floor: 2, name: 'อาคาร 4 (สีเขียว)', style: 'top: 5%; left: 80%; width: 15%; height: 65%;', status: false },
+            { id: 'fr2r202', floor: 2, name: 'อาคาร 1', style: 'top: 38%; left: 60%; width: 15%; height: 40%;', status: false },
             
             // Status: True
             { 
@@ -218,6 +226,10 @@
             { 
                 id: 'f2x503', floor: 2, name: 'หนังสือเล่มเล็ก', style: 'top: 55%; left: 80%; width: 15%; height: 10%;' , status: false, color: '#8b5cf6',
                 building: 'อาคาร 4 (สีเขียว)', location: 'ห้อง 112', details: 'การแข่งขันทำหนังสือเล่มเล็ก ระดับ ป.4-6'
+            },
+                        { 
+                id: 'fr2x504', floor: 2, name: 'จักรสาน', style: 'top: 15%; left: 80%; width: 15%; height: 10%;' , status: false, color: '#8b5cf6',
+                building: 'อาคาร 4 (สีเขียว)', location: 'ใต้อาคาร 4', details: 'การแข่งขันจักรสาน'
             },
             { 
                 id: 'f2x501', floor: 2, name: 'คอมกราฟิก', style: 'top: 50%; left: 60%; width: 15%; height: 10%;', status: true, color: '#ec4899',
