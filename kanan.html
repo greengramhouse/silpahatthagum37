@@ -106,6 +106,17 @@
 
     </div>
 
+    <!-- Refresh Button (FAB) -->
+    <button onclick="app.refreshData()" id="btn-refresh" class="fixed bottom-6 right-6 bg-indigo-600 hover:bg-indigo-700 text-white p-4 rounded-full shadow-xl shadow-indigo-300 z-40 transition transform active:scale-90 flex items-center justify-center">
+        <svg id="icon-refresh" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        <svg id="icon-loading" class="animate-spin h-6 w-6 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+    </button>
+
     <!-- Modal for Details -->
     <div id="detail-modal" class="fixed inset-0 z-[60] hidden">
         <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="app.closeModal()"></div>
@@ -151,7 +162,7 @@
         //  CONFIGURATION 
         // ==========================================
         const API_URL = "https://script.google.com/macros/s/AKfycbw6xihHx01eYPQlJ8jH7mtFjM6XFUGIoVc3JvCnVEl4i9nfSHFqDCqQQCO3F1JDgv_k/exec"; 
-        const LIFF_ID = "1657704109-m7Qpqu4W"; // ใส่ LIFF ID ที่ได้จาก Line Developers
+        const LIFF_ID = "1657704109-m7Qpqu4W"; 
         // ==========================================
 
         const app = {
@@ -165,12 +176,7 @@
 
             initLIFF: async function() {
                 try {
-                    // ถ้าเป็นค่า Placeholder ค่อยข้าม (แก้เงื่อนไขให้ถูกต้อง)
-                    if(LIFF_ID === "YOUR_LIFF_ID_HERE" || LIFF_ID === "") {
-                        console.warn("LIFF ID not configured");
-                        return;
-                    }
-
+                    // *** แก้ไขแล้ว: ลบเงื่อนไขที่ขัดขวางการทำงานออก ***
                     await liff.init({ liffId: LIFF_ID });
                     
                     // เช็คว่า User เปิดใน App LINE หรือ Browser
@@ -189,7 +195,7 @@
                     }
                 } catch (err) {
                     console.error("LIFF Init failed", err);
-                    Swal.fire('Connection Error', 'ไม่สามารถเชื่อมต่อกับ LINE ได้ (' + err.code + ')', 'error');
+                    // Swal.fire('Connection Error', 'ไม่สามารถเชื่อมต่อกับ LINE ได้ (' + err.code + ')', 'error');
                 }
             },
 
@@ -219,6 +225,37 @@
                 } catch (err) {
                     console.error("Get Profile failed", err);
                 }
+            },
+
+            refreshData: async function() {
+                const btn = document.getElementById('btn-refresh');
+                const iconRefresh = document.getElementById('icon-refresh');
+                const iconLoading = document.getElementById('icon-loading');
+
+                // UI Loading state
+                btn.disabled = true;
+                iconRefresh.classList.add('hidden');
+                iconLoading.classList.remove('hidden');
+
+                // Fetch
+                await this.fetchData();
+
+                // UI Reset
+                setTimeout(() => {
+                    btn.disabled = false;
+                    iconRefresh.classList.remove('hidden');
+                    iconLoading.classList.add('hidden');
+                    
+                    // Toast Notification
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'bottom-end',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        timerProgressBar: false,
+                    })
+                    Toast.fire({ icon: 'success', title: 'อัปเดตข้อมูลแล้ว' });
+                }, 500);
             },
 
             fetchData: async function() {
