@@ -79,7 +79,7 @@
             </div>
             <div class="flex space-x-2 text-sm font-medium">
                 <button onclick="app.showPage('home')" class="flex items-center space-x-1 px-4 py-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" /></svg>
                     <span>รายการแข่งขัน</span>
                 </button>
                 <button onclick="app.showPage('summary')" class="flex items-center space-x-1 px-4 py-2 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition">
@@ -360,8 +360,12 @@
                         .filter(s => s.activityId == id && s.school == row.school)
                         .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
                     groups[id].teams.push({
-                        school: row.school, students: row.students, teacher: row.teacher,
-                        score: scoreEntry ? scoreEntry.score : null, medal: scoreEntry ? scoreEntry.medal : null
+                        school: row.school, 
+                        students: row.students, 
+                        teacher: row.teacher,
+                        score: scoreEntry ? scoreEntry.score : null, 
+                        medal: scoreEntry ? scoreEntry.medal : null,
+                        comment: scoreEntry ? scoreEntry.comment : "" // Map Comment
                     });
                 });
                 this.groupedData = Object.values(groups);
@@ -470,6 +474,14 @@
                                 <p class="text-sm text-slate-600 flex items-start"><span class="w-16 text-xs uppercase font-bold text-slate-400 mt-0.5">นักเรียน</span> <span>${team.students}</span></p>
                                 <p class="text-sm text-slate-600 flex items-start"><span class="w-16 text-xs uppercase font-bold text-slate-400 mt-0.5">ครู</span> <span>${team.teacher}</span></p>
                             </div>
+                            
+                            <!-- Comment Input -->
+                            <div class="mt-3">
+                                <input type="text" id="comment-${index}" 
+                                    value="${team.comment || ''}" 
+                                    placeholder="ข้อเสนอแนะ/หมายเหตุ (ถ้ามี)" 
+                                    class="w-full text-sm border-b border-slate-200 bg-transparent py-1 px-2 focus:border-indigo-500 focus:outline-none transition-colors placeholder-slate-300 text-slate-600">
+                            </div>
                         </div>
                         <div class="flex items-center gap-3 w-full md:w-auto bg-slate-50 p-3 rounded-xl border border-slate-100">
                             <div class="relative">
@@ -496,10 +508,13 @@
                 this.showPage('score');
             },
 
-            // ... (submitScore, calculateMedal, getMedalColor logic remains similar but styled) ...
             submitScore: async function(actId, schoolName, index) {
                 const input = document.getElementById(`input-${index}`);
+                const commentInput = document.getElementById(`comment-${index}`);
+                
                 const scoreVal = input.value;
+                const commentVal = commentInput.value; // Get comment value
+
                 if(scoreVal === '' || scoreVal < 0 || scoreVal > 100) { Swal.fire('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกคะแนน 0-100', 'warning'); return; }
                 const score = parseFloat(scoreVal);
                 const medal = this.calculateMedal(score);
@@ -508,11 +523,16 @@
                 btn.innerHTML = `<svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>`;
                 btn.disabled = true;
                 try {
-                    const payload = { activityId: actId, school: schoolName, score: score, medal: medal };
+                    // Include comment in payload
+                    const payload = { activityId: actId, school: schoolName, score: score, medal: medal, comment: commentVal };
                     await fetch(API_URL, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     const actIdx = this.groupedData.findIndex(a => a.id === actId);
                     const teamIdx = this.groupedData[actIdx].teams.findIndex(t => t.school === schoolName);
-                    if(teamIdx >= 0) { this.groupedData[actIdx].teams[teamIdx].score = score; this.groupedData[actIdx].teams[teamIdx].medal = medal; }
+                    if(teamIdx >= 0) { 
+                        this.groupedData[actIdx].teams[teamIdx].score = score; 
+                        this.groupedData[actIdx].teams[teamIdx].medal = medal;
+                        this.groupedData[actIdx].teams[teamIdx].comment = commentVal; // Update local state
+                    }
                     const badge = document.getElementById(`badge-${index}`).querySelector('span:last-child');
                     badge.innerText = medal;
                     badge.className = `text-sm font-bold px-3 py-1.5 rounded-lg border w-full text-center shadow-sm whitespace-nowrap ${this.getMedalColor(medal)}`;
@@ -625,11 +645,12 @@
             },
             
             exportToCSV: function() {
-                let csv = "\uFEFFActivity,School,Students,Teacher,Score,Medal\n";
+                let csv = "\uFEFFActivity,School,Students,Teacher,Score,Medal,Comment\n"; // Added Comment header
                 this.groupedData.forEach(act => {
                     act.teams.forEach(t => {
                         const m = this.calculateMedal(t.score);
-                        csv += `"${act.name}","${t.school}","${t.students}","${t.teacher}","${t.score||''}","${m}"\n`;
+                        const c = t.comment ? t.comment.replace(/,/g, ' ') : ''; // Escape commas in comment
+                        csv += `"${act.name}","${t.school}","${t.students}","${t.teacher}","${t.score||''}","${m}","${c}"\n`;
                     });
                 });
                 const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -665,19 +686,20 @@
                     { text: 'รายชื่อนักเรียน', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' },
                     { text: 'ครูผู้ฝึกสอน', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' },
                     { text: 'คะแนน', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' },
-                    { text: 'หมายเหตุ', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' }
+                    // { text: 'หมายเหตุ', style: 'tableHeader', alignment: 'center', fillColor: '#f1f5f9' }
                 ]];
                 act.teams.forEach((team, index) => {
                     const students = team.students.split(',').map(s => s.trim()).join('\n');
                     const teachers = team.teacher.split(',').map(t => t.trim()).join('\n');
                     let scoreDisplay = (!isBlank && team.score !== null) ? team.score : '';
+                    let commentDisplay = (!isBlank && team.comment) ? team.comment : ''; // Show comment in PDF
                     body.push([
                         { text: index + 1, alignment: 'center' },
                         { text: team.school },
                         { text: students },
                         { text: teachers },
                         { text: scoreDisplay, alignment: 'center' }, 
-                        { text: '', alignment: 'center' }
+                        // { text: commentDisplay, alignment: 'left', fontSize: 12 } 
                     ]);
                 });
                 let titleText = isBlank ? 'แบบบันทึกคะแนนการแข่งขันศิลปหัตถกรรมนักเรียน' : 'ใบสรุปคะแนนการแข่งขันศิลปหัตถกรรมนักเรียน';
@@ -688,7 +710,7 @@
                         { text: 'กลุ่มสุวรรณโยธิน ครั้งที่ 73 ประจำปีการศึกษา 2568', style: 'subheader_small' },
                         { text: '\n' },
                         {
-                            table: { headerRows: 1, widths: [25, '*', 120, 100, 40, 50], body: body },
+                            table: { headerRows: 1, widths: [20, '*', 120, 120, 45], body: body }, // Adjusted widths for comment
                             layout: { hLineWidth: (i) => 0.5, vLineWidth: (i) => 0.5, hLineColor: (i) => '#cbd5e1', vLineColor: (i) => '#cbd5e1' }
                         },
                         { text: '\n\n\n' },
@@ -701,10 +723,10 @@
                     ],
                     defaultStyle: { font: 'THSarabunNew', fontSize: 14 },
                     styles: {
-                        header: { fontSize: 20, bold: true, alignment: 'center', margin: [0, 0, 0, 5] },
-                        subheader: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 2] },
+                        header: { fontSize: 16, bold: true, alignment: 'center', margin: [0, 0, 0, 5] },
+                        subheader: { fontSize: 14, bold: true, alignment: 'center', margin: [0, 0, 0, 2] },
                         subheader_small: { fontSize: 14, alignment: 'center', margin: [0, 0, 0, 10] },
-                        tableHeader: { bold: true, fontSize: 14, color: '#334155' }
+                        tableHeader: { bold: true, fontSize: 12, color: '#334155' }
                     }
                 };
                 try { pdfMake.createPdf(docDefinition).open(); } 
