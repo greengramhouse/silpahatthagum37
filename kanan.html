@@ -73,7 +73,7 @@
         <!-- Search Bar -->
         <div class="relative mb-6">
             <input type="text" id="search-box" onkeyup="app.filterResults()" 
-                placeholder="ค้นหารายการ หรือ โรงเรียน..." 
+                placeholder="ค้นหารายการ, โรงเรียน หรือชื่อคน..." 
                 class="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition text-sm">
             <svg class="w-5 h-5 text-slate-400 absolute left-4 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
         </div>
@@ -169,177 +169,173 @@
             data: [],
             
             init: async function() {
-                // รอให้ LIFF Init เสร็จก่อน เพื่อเช็คสถานะ Login
                 await this.initLIFF();
                 await this.fetchData();
             },
 
             initLIFF: async function() {
                 try {
-                    // *** แก้ไขแล้ว: ลบเงื่อนไขที่ขัดขวางการทำงานออก ***
                     await liff.init({ liffId: LIFF_ID });
-                    
-                    // เช็คว่า User เปิดใน App LINE หรือ Browser
                     if (!liff.isLoggedIn()) {
-                        // ยังไม่ล็อกอิน -> แสดงปุ่ม Login
                         document.getElementById('btn-login').classList.remove('hidden');
                         document.getElementById('user-profile').classList.add('hidden');
-                        
-                        // ถ้าเปิดใน LINE App ให้ Login อัตโนมัติ (Optional)
-                        if (liff.isInClient()) {
-                            liff.login();
-                        }
+                        if (liff.isInClient()) liff.login();
                     } else {
-                        // ล็อกอินแล้ว -> แสดงโปรไฟล์
                         this.showProfile();
                     }
                 } catch (err) {
                     console.error("LIFF Init failed", err);
-                    // Swal.fire('Connection Error', 'ไม่สามารถเชื่อมต่อกับ LINE ได้ (' + err.code + ')', 'error');
                 }
             },
 
-            loginLIFF: function() {
-                // เช็คก่อนเรียก Login เพื่อป้องกัน Error ซ้ำซ้อน
-                if (!liff.isLoggedIn()) {
-                    liff.login();
-                }
-            },
-
-            logoutLIFF: function() {
-                if (liff.isLoggedIn()) {
-                    liff.logout();
-                    window.location.reload(); // รีโหลดหน้าหลัง logout
-                }
-            },
+            loginLIFF: function() { if (!liff.isLoggedIn()) liff.login(); },
+            logoutLIFF: function() { if (liff.isLoggedIn()) { liff.logout(); window.location.reload(); } },
 
             showProfile: async function() {
                 try {
                     const profile = await liff.getProfile();
                     document.getElementById('profile-img').src = profile.pictureUrl;
                     document.getElementById('profile-name').innerText = profile.displayName;
-                    
-                    // สลับการแสดงผล
                     document.getElementById('btn-login').classList.add('hidden');
                     document.getElementById('user-profile').classList.remove('hidden');
-                } catch (err) {
-                    console.error("Get Profile failed", err);
-                }
+                } catch (err) { console.error("Get Profile failed", err); }
             },
 
             refreshData: async function() {
                 const btn = document.getElementById('btn-refresh');
                 const iconRefresh = document.getElementById('icon-refresh');
                 const iconLoading = document.getElementById('icon-loading');
-
-                // UI Loading state
                 btn.disabled = true;
                 iconRefresh.classList.add('hidden');
                 iconLoading.classList.remove('hidden');
-
-                // Fetch
                 await this.fetchData();
-
-                // UI Reset
                 setTimeout(() => {
                     btn.disabled = false;
                     iconRefresh.classList.remove('hidden');
                     iconLoading.classList.add('hidden');
-                    
-                    // Toast Notification
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'bottom-end',
-                        showConfirmButton: false,
-                        timer: 2000,
-                        timerProgressBar: false,
-                    })
-                    Toast.fire({ icon: 'success', title: 'อัปเดตข้อมูลแล้ว' });
+                    Swal.mixin({ toast: true, position: 'bottom-end', showConfirmButton: false, timer: 2000 }).fire({ icon: 'success', title: 'อัปเดตข้อมูลแล้ว' });
                 }, 500);
             },
 
             fetchData: async function() {
                 try {
-                    if(API_URL.includes("PLACEHOLDER")) {
-                        // Mock Data for demo if URL not set
-                        this.processData(this.getMockData());
-                        return;
-                    }
-
                     const response = await fetch(API_URL);
                     const json = await response.json();
-                    
-                    // Group data logic (Same as Main App)
                     this.processRawData(json.competitions, json.savedScores);
-
                 } catch (error) {
                     console.error("Fetch Error", error);
-                    // Fallback to mock data for preview
-                    this.processData(this.getMockData()); 
+                    this.processRawData([], []);
                 }
             },
 
             processRawData: function(competitions, scores) {
                 const groups = {};
                 competitions.forEach(row => {
-                    if (!groups[row.id]) {
-                        groups[row.id] = { id: row.id, name: row.name, level: row.level, teams: [] };
-                    }
-                    const scoreEntry = scores
-                        .filter(s => s.activityId == row.id && s.school == row.school)
+                    if (!groups[row.id]) groups[row.id] = { id: row.id, name: row.name, level: row.level, teams: [] };
+                    const scoreEntry = scores.filter(s => s.activityId == row.id && s.school == row.school)
                         .sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp))[0];
-                    
                     groups[row.id].teams.push({
-                        school: row.school, 
-                        students: row.students, 
-                        teacher: row.teacher,
-                        score: scoreEntry ? scoreEntry.score : null, 
-                        medal: scoreEntry ? scoreEntry.medal : null
+                        school: row.school, students: row.students, teacher: row.teacher,
+                        score: scoreEntry ? scoreEntry.score : null, medal: scoreEntry ? scoreEntry.medal : null
                     });
                 });
-                
-                // Convert to array and sort teams by score desc
                 this.data = Object.values(groups).map(act => {
                     act.teams.sort((a, b) => (b.score || 0) - (a.score || 0));
                     return act;
                 });
-                
                 this.renderList(this.data);
             },
-            
-            // Mock Data for preview purposes
-            getMockData: function() { 
-                return []; // Logic moved to processRawData mainly
+
+            // --- IMPROVED FILTER LOGIC ---
+            filterResults: function() {
+                const term = document.getElementById('search-box').value.trim().toLowerCase();
+                
+                if (!term) {
+                    this.renderList(this.data);
+                    return;
+                }
+
+                // ค้นหาใน: ชื่อกิจกรรม, โรงเรียน, นักเรียน, ครู
+                const filtered = this.data.filter(act => {
+                    const nameMatch = (act.name || "").toString().toLowerCase().includes(term);
+                    
+                    // Check teams for school/student/teacher matches
+                    const teamsMatch = (act.teams || []).some(t => {
+                        const schoolMatch = (t.school || "").toString().toLowerCase().includes(term);
+                        const studentMatch = (t.students || "").toString().toLowerCase().includes(term);
+                        const teacherMatch = (t.teacher || "").toString().toLowerCase().includes(term);
+                        return schoolMatch || studentMatch || teacherMatch;
+                    });
+                    
+                    return nameMatch || teamsMatch;
+                });
+                
+                // Pass the search term to renderList to highlight matches
+                this.renderList(filtered, term);
+            },
+
+            filterCategory: function(cat) {
+                if(cat === 'all') { this.renderList(this.data); return; }
+                const filtered = this.data.filter(act => {
+                    const style = this.getCategoryStyle(act.name);
+                    if(cat === 'art' && style.label === 'ศิลปะ') return true;
+                    if(cat === 'tech' && style.label === 'เทคโนโลยี') return true;
+                    if(cat === 'craft' && style.label === 'การงานฯ') return true;
+                    if(cat === 'music' && style.label === 'ดนตรี') return true;
+                    return false;
+                });
+                this.renderList(filtered);
             },
 
             // --- RENDER LOGIC ---
-            renderList: function(items) {
+            renderList: function(items, searchTerm = "") {
                 const container = document.getElementById('results-list');
                 const skeleton = document.getElementById('loading-skeleton');
+                const noResult = document.getElementById('no-result');
                 container.innerHTML = '';
                 
                 if(items.length === 0) {
                     skeleton.classList.add('hidden');
-                    document.getElementById('no-result').classList.remove('hidden');
+                    noResult.classList.remove('hidden');
                     return;
                 }
+                
+                noResult.classList.add('hidden');
 
                 items.forEach(act => {
-                    // Check completion
                     const scoredTeams = act.teams.filter(t => t.score !== null);
                     const isCompleted = scoredTeams.length > 0 && scoredTeams.length === act.teams.length;
                     const topTeam = scoredTeams.length > 0 ? scoredTeams[0] : null;
-                    
-                    // Style
                     const style = this.getCategoryStyle(act.name);
+
+                    // Check if specific team matched the search
+                    let matchedTeamName = "";
+                    if (searchTerm) {
+                        const matchedTeam = act.teams.find(t => 
+                            (t.school || "").toLowerCase().includes(searchTerm) ||
+                            (t.students || "").toLowerCase().includes(searchTerm)
+                        );
+                        if (matchedTeam) matchedTeamName = matchedTeam.school;
+                    }
 
                     const div = document.createElement('div');
                     div.className = "bg-white rounded-2xl p-5 shadow-sm border border-slate-100 relative overflow-hidden transition active:scale-[0.98]";
                     div.onclick = () => this.openModal(act);
 
-                    let winnerHTML = '';
-                    if (topTeam && topTeam.medal === 'ทอง') {
-                        winnerHTML = `
+                    let bottomContent = '';
+                    
+                    // Priority 1: Show matched team (if searching)
+                    if (matchedTeamName) {
+                        bottomContent = `
+                            <div class="mt-4 pt-3 border-t border-slate-50 flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full">พบ</span>
+                                <p class="text-sm font-bold text-slate-700 truncate">${matchedTeamName}</p>
+                            </div>
+                        `;
+                    } 
+                    // Priority 2: Show Winner (if Gold)
+                    else if (topTeam && topTeam.medal === 'ทอง') {
+                        bottomContent = `
                             <div class="mt-4 pt-3 border-t border-slate-50 flex items-center gap-3">
                                 <span class="flex-shrink-0 w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center text-lg">🥇</span>
                                 <div class="min-w-0">
@@ -348,8 +344,10 @@
                                 </div>
                             </div>
                         `;
-                    } else if (scoredTeams.length === 0) {
-                        winnerHTML = `
+                    } 
+                    // Priority 3: Show status
+                    else if (scoredTeams.length === 0) {
+                        bottomContent = `
                              <div class="mt-4 pt-3 border-t border-slate-50 flex items-center gap-2 opacity-50">
                                 <div class="w-2 h-2 bg-slate-300 rounded-full animate-pulse"></div>
                                 <p class="text-xs text-slate-400">ยังไม่มีการประกาศผล</p>
@@ -367,11 +365,11 @@
                                 </span>
                             </div>
                             <h3 class="font-bold text-slate-800 text-lg leading-snug line-clamp-2 mb-1">${act.name}</h3>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 mb-1">
                                 <span class="text-xs text-white px-2 py-0.5 rounded-md ${style.bgClass}">${style.label}</span>
                                 <span class="text-xs text-slate-400 font-medium">${act.level}</span>
                             </div>
-                            ${winnerHTML}
+                            ${bottomContent}
                         </div>
                     `;
                     container.appendChild(div);
@@ -381,37 +379,27 @@
                 container.classList.remove('hidden');
             },
 
+            // ... (openModal, closeModal, shareResult, getCategoryStyle, getMedalColor remain same) ...
             openModal: function(act) {
                 const modal = document.getElementById('detail-modal');
                 const panel = document.getElementById('modal-panel');
                 const content = document.getElementById('modal-content');
                 const btnShare = document.getElementById('btn-share');
-
                 document.getElementById('modal-title').innerText = act.name;
                 document.getElementById('modal-level').innerText = act.level;
                 
-                // Render Teams
                 content.innerHTML = '';
-                
                 if(act.teams.every(t => t.score === null)) {
-                    content.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-64 text-slate-400">
-                            <svg class="w-16 h-16 mb-4 opacity-20" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/></svg>
-                            <p>ยังไม่มีผลการแข่งขัน</p>
-                        </div>`;
+                    content.innerHTML = `<div class="flex flex-col items-center justify-center h-64 text-slate-400"><p>ยังไม่มีผลการแข่งขัน</p></div>`;
                 } else {
                     act.teams.forEach((team, idx) => {
                         if(team.score === null) return;
-                        
                         let rankIcon = `<span class="text-slate-400 font-bold text-sm w-6 text-center">${idx+1}</span>`;
                         let bgClass = "bg-white";
-                        
                         if(idx === 0) { rankIcon = "🥇"; bgClass = "bg-yellow-50/50 border-yellow-100"; }
                         else if(idx === 1) { rankIcon = "🥈"; }
                         else if(idx === 2) { rankIcon = "🥉"; }
-
                         const medalColor = this.getMedalColor(team.medal);
-
                         content.innerHTML += `
                             <div class="p-4 border-b border-slate-100 ${bgClass} flex items-start gap-3">
                                 <div class="flex-shrink-0 pt-1 text-xl w-8 text-center">${rankIcon}</div>
@@ -426,152 +414,53 @@
                                     <span class="text-xs font-bold ${medalColor} px-2 py-0.5 rounded border text-center min-w-[60px]">${team.medal}</span>
                                     <span class="text-[10px] text-slate-400 font-mono">${team.score} คะแนน</span>
                                 </div>
-                            </div>
-                        `;
+                            </div>`;
                     });
                 }
-
-                // Setup Share Button
                 btnShare.onclick = () => this.shareResult(act);
-
                 modal.classList.remove('hidden');
-                setTimeout(() => {
-                    panel.classList.remove('translate-y-full');
-                }, 10);
+                setTimeout(() => panel.classList.remove('translate-y-full'), 10);
             },
 
             closeModal: function() {
                 const modal = document.getElementById('detail-modal');
                 const panel = document.getElementById('modal-panel');
                 panel.classList.add('translate-y-full');
-                setTimeout(() => {
-                    modal.classList.add('hidden');
-                }, 300);
+                setTimeout(() => modal.classList.add('hidden'), 300);
             },
 
-            // --- LIFF SHARE LOGIC ---
             shareResult: async function(act) {
-                if (!liff.isInClient() && !liff.isLoggedIn()) {
-                    Swal.fire('แจ้งเตือน', 'ฟีเจอร์นี้ใช้งานได้บนแอป LINE เท่านั้น', 'info');
-                    return;
-                }
-
-                // Construct Flex Message
+                if (!liff.isInClient() && !liff.isLoggedIn()) { Swal.fire('แจ้งเตือน', 'ฟีเจอร์นี้ใช้งานได้บนแอป LINE เท่านั้น', 'info'); return; }
                 const topTeams = act.teams.filter(t => t.score !== null).slice(0, 3);
-                
-                // Build body contents (Top 3 list)
                 const bodyContents = topTeams.map((team, index) => {
-                    let icon = "🏆";
-                    let color = "#E6B800"; // Gold
+                    let icon = "🏆", color = "#E6B800";
                     if(index === 1) { icon = "🥈"; color = "#A3A3A3"; }
                     if(index === 2) { icon = "🥉"; color = "#CD7F32"; }
-
-                    return {
-                        "type": "box",
-                        "layout": "horizontal",
-                        "contents": [
-                            { "type": "text", "text": icon, "size": "sm", "flex": 0 },
-                            { "type": "text", "text": team.school, "size": "sm", "color": "#111111", "flex": 4, "wrap": true, "weight": "bold", "margin": "sm" },
-                            { "type": "text", "text": team.medal, "size": "xs", "color": color, "align": "end", "gravity": "center" }
-                        ],
-                        "margin": "md"
-                    };
+                    return { "type": "box", "layout": "horizontal", "contents": [
+                        { "type": "text", "text": icon, "size": "sm", "flex": 0 },
+                        { "type": "text", "text": team.school, "size": "sm", "color": "#111111", "flex": 4, "wrap": true, "weight": "bold", "margin": "sm" },
+                        { "type": "text", "text": team.medal, "size": "xs", "color": color, "align": "end", "gravity": "center" }
+                    ], "margin": "md" };
                 });
-                
-                if(bodyContents.length === 0) {
-                     bodyContents.push({ "type": "text", "text": "ยังไม่มีผลการแข่งขัน", "size": "sm", "color": "#aaaaaa", "align": "center" });
-                }
-
-                const flexMessage = {
-                    "type": "flex",
-                    "altText": `ประกาศผล: ${act.name}`,
-                    "contents": {
-                        "type": "bubble",
-                        "header": {
-                            "type": "box",
-                            "layout": "vertical",
-                            "contents": [
-                                { "type": "text", "text": "ประกาศผลรางวัล", "weight": "bold", "color": "#06C755", "size": "xxs" },
-                                { "type": "text", "text": act.name, "weight": "bold", "size": "md", "wrap": true, "margin": "xs" },
-                                { "type": "text", "text": `ระดับชั้น ${act.level}`, "size": "xs", "color": "#aaaaaa", "margin": "xs" }
-                            ]
-                        },
-                        "hero": {
-                            "type": "image",
-                            "url": "https://cdn-icons-png.flaticon.com/512/3112/3112946.png", // Generic Trophy Icon
-                            "size": "full",
-                            "aspectRatio": "20:13",
-                            "aspectMode": "cover",
-                        },
-                        "body": {
-                            "type": "box",
-                            "layout": "vertical",
-                            "contents": [
-                                { "type": "text", "text": "สรุปเหรียญรางวัล", "weight": "bold", "size": "sm", "margin": "md" },
-                                { "type": "separator", "margin": "sm" },
-                                ...bodyContents
-                            ]
-                        },
-                        "footer": {
-                            "type": "box",
-                            "layout": "vertical",
-                            "contents": [
-                                {
-                                    "type": "button",
-                                    "action": { "type": "uri", "label": "ดูผลทั้งหมด", "uri": "https://liff.line.me/" + LIFF_ID }, // Link back to app
-                                    "style": "primary",
-                                    "color": "#06C755"
-                                }
-                            ]
-                        }
-                    }
-                };
-
-                try {
-                    const res = await liff.shareTargetPicker([flexMessage]);
-                    if (res) {
-                        Swal.fire({ icon: 'success', title: 'แชร์เรียบร้อย', toast: true, position: 'top', showConfirmButton: false, timer: 1500 });
-                    }
-                } catch (error) {
-                    console.log('Share Error: ', error);
-                    // Fallback alert is handled by LIFF SDK usually, but logging helps
-                }
-            },
-
-            // --- UTILS ---
-            filterResults: function() {
-                const term = document.getElementById('search-box').value.toLowerCase();
-                const filtered = this.data.filter(act => 
-                    act.name.toLowerCase().includes(term) || 
-                    act.teams.some(t => t.school.toLowerCase().includes(term))
-                );
-                this.renderList(filtered);
-            },
-
-            filterCategory: function(cat) {
-                if(cat === 'all') { this.renderList(this.data); return; }
-                const filtered = this.data.filter(act => {
-                    const style = this.getCategoryStyle(act.name);
-                    // Simple mapping based on style labels/colors logic used in getCategoryStyle
-                    if(cat === 'art' && style.label === 'ศิลปะ') return true;
-                    if(cat === 'tech' && style.label === 'เทคโนโลยี') return true;
-                    if(cat === 'craft' && style.label === 'การงานฯ') return true;
-                    if(cat === 'music' && style.label === 'ดนตรี') return true;
-                    return false;
-                });
-                this.renderList(filtered);
+                if(bodyContents.length === 0) bodyContents.push({ "type": "text", "text": "ยังไม่มีผลการแข่งขัน", "size": "sm", "color": "#aaaaaa", "align": "center" });
+                const flexMessage = { "type": "flex", "altText": `ประกาศผล: ${act.name}`, "contents": {
+                    "type": "bubble", "header": { "type": "box", "layout": "vertical", "contents": [
+                        { "type": "text", "text": "ประกาศผลรางวัล", "weight": "bold", "color": "#06C755", "size": "xxs" },
+                        { "type": "text", "text": act.name, "weight": "bold", "size": "md", "wrap": true, "margin": "xs" },
+                        { "type": "text", "text": `ระดับชั้น ${act.level}`, "size": "xs", "color": "#aaaaaa", "margin": "xs" }
+                    ]}, "hero": { "type": "image", "url": "https://cdn-icons-png.flaticon.com/512/3112/3112946.png", "size": "full", "aspectRatio": "20:13", "aspectMode": "cover" },
+                    "body": { "type": "box", "layout": "vertical", "contents": [ { "type": "text", "text": "สรุปเหรียญรางวัล", "weight": "bold", "size": "sm", "margin": "md" }, { "type": "separator", "margin": "sm" }, ...bodyContents ]},
+                    "footer": { "type": "box", "layout": "vertical", "contents": [ { "type": "button", "action": { "type": "uri", "label": "ดูผลทั้งหมด", "uri": "https://liff.line.me/" + LIFF_ID }, "style": "primary", "color": "#06C755" }]}
+                }};
+                try { const res = await liff.shareTargetPicker([flexMessage]); if (res) Swal.fire({ icon: 'success', title: 'แชร์เรียบร้อย', toast: true, position: 'top', showConfirmButton: false, timer: 1500 }); } catch (error) { console.log('Share Error: ', error); }
             },
 
             getCategoryStyle: function(name) {
-                const n = name.toLowerCase();
-                if(n.includes('คอม') || n.includes('หุ่นยนต์') || n.includes('การ์ตูน')) 
-                    return { label: 'เทคโนโลยี', bgClass: 'bg-blue-500', barClass: 'bg-blue-500' };
-                if(n.includes('วาด') || n.includes('ศิลป์') || n.includes('ปั้น')) 
-                    return { label: 'ศิลปะ', bgClass: 'bg-rose-500', barClass: 'bg-rose-500' };
-                if(n.includes('ประดิษฐ์') || n.includes('อาหาร') || n.includes('สาน')) 
-                    return { label: 'การงานฯ', bgClass: 'bg-emerald-500', barClass: 'bg-emerald-500' };
-                if(n.includes('ดนตรี') || n.includes('เพลง') || n.includes('รำ')) 
-                    return { label: 'ดนตรี', bgClass: 'bg-violet-500', barClass: 'bg-violet-500' };
+                const n = (name || "").toLowerCase();
+                if(n.includes('คอม') || n.includes('หุ่นยนต์') || n.includes('การ์ตูน')) return { label: 'เทคโนโลยี', bgClass: 'bg-blue-500', barClass: 'bg-blue-500' };
+                if(n.includes('วาด') || n.includes('ศิลป์') || n.includes('ปั้น')) return { label: 'ศิลปะ', bgClass: 'bg-rose-500', barClass: 'bg-rose-500' };
+                if(n.includes('ประดิษฐ์') || n.includes('อาหาร') || n.includes('สาน')) return { label: 'การงานฯ', bgClass: 'bg-emerald-500', barClass: 'bg-emerald-500' };
+                if(n.includes('ดนตรี') || n.includes('เพลง') || n.includes('รำ')) return { label: 'ดนตรี', bgClass: 'bg-violet-500', barClass: 'bg-violet-500' };
                 return { label: 'วิชาการ', bgClass: 'bg-amber-500', barClass: 'bg-amber-500' };
             },
 
@@ -583,9 +472,7 @@
             }
         };
 
-        // Auto Start
         window.onload = () => app.init();
-
     </script>
 </body>
 </html>
